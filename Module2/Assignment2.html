@@ -2,12 +2,13 @@
 <html>
 	<head>
 		<script src ="jquery-1.9.1.min.js"></script>
-		<style>
-			#canvas{ width:60%;
-				height:60%;}
-		</style>
 	</head>
 	<body>
+		Input method:<br/>
+		<input type="radio" name="RenderType" value="1" checked>Line loop</input><br/>
+		<input type="radio" name="RenderType" value="2">Point sprites</input><br/>
+		<input type="radio" name="RenderType" value="3">Polygons</input><br/>
+		<br/>
 		<canvas id="canvas" />
 		<script type="text/javascript">
 ///Some global variables
@@ -15,12 +16,14 @@
 			var shaderProgram;
 			var CircleAngles; 
 			
-			const CircleRadius = 1.0;
-			const CIRCLEVERTICES = 8; //amount of vertices used to form circle approximation
+			const CircleRadius = 0.6;
+			const CIRCLEVERTICES = 16; //amount of vertices used to form circle approximation
 			
 ///"main" bunch of code
 			$(function() {
 				var canvas = $("canvas")[0];
+				canvas.height = 720;
+				canvas.width = 720; //720p :)
 				initGL(canvas);
 				initShaders();
 				initBuffers();
@@ -117,7 +120,14 @@
 				//Angle data buffer
 				CircleAngles = gl.createBuffer();
 				gl.bindBuffer(gl.ARRAY_BUFFER, CircleAngles);
-				var angles = [ 0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0]; //let's make them in degrees
+				var angles = new Array();
+				var angle = 0.0;
+				for(var i = 0; i < CIRCLEVERTICES; i++)
+				{
+					angles[i] = angle;
+					angle += 360/CIRCLEVERTICES;
+				}
+				//var angles = [ 0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0]; //let's make them in degrees
 				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(angles), gl.STATIC_DRAW);
 				CircleAngles.itemSize = 1;
 				CircleAngles.nimItems = CIRCLEVERTICES;
@@ -156,7 +166,7 @@
 			{
 				v_Angle = Angle;
 				vec4 v_coords = transform(Angle);
-				gl_Position = vec4( (v_coords.y * radius + v_coords.z), (v_coords.x * radius + v_coords.w), 0.0, 0.0);
+				gl_Position = vec4( (v_coords.y * radius + v_coords.z), (v_coords.x * radius + v_coords.w), 0.0, 1.0);
 			}
 		</script>
 		
@@ -174,7 +184,7 @@
 			*/
 			void main()
 			{
-				gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);//color(v_Angle);
+				gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);//color(v_Angle);
 			}
 		</script>
 	</body>
