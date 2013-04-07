@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src ="jquery-1.9.1.min.js"></script>
+		<style>
+			#canvas{ width:60%;
+				height:60%;}
+		</style>
+	</head>
+	<body>
+		<canvas id="canvas" />
+		<script type="text/javascript">
+///Some global variables
+			var gl;
+			var shaderProgram;
+			var CircleVertPosBuffer; 
+			
+			const CircleRadius = 0.1;
+			const CIRCLEVERTICES = 11; //amount of vertices used to form circle approximation
+			
+///"main" bunch of code
+			$(function() {
+				var canvas = $("canvas")[0];
+				initGL(canvas);
+				initShaders();
+				initBuffers();
+				
+				gl.clearColor(0, 0, 0, 1.0); //CANVAS COLOR
+				gl.clear(gl.COLOR_BUFFER_BIT);
+				//gl.clearColor(0.0, 0.0, 0.0, 1.0);
+				//gl.enable(gl.DEPTH_TEST);
+				
+				drawLineLoop(); //Drawing line loop from indices using trigonometry, computed in vertex shader
+			});
+			
+			function drawLineLoop()
+			{
+				var vertPos = gl.getAttribLocation(shaderProgram, "vPosition");
+				gl.bindBuffer(gl.ARRAY_BUFFER, CircleVertPosBuffer);
+				gl.vertexAttribPointer(vertPos, 4, gl.FLOAT, false, 0,0);
+				gl.uniform1f(gl.getUniformLocation(shaderProgram, "radius"), CircleRadius); //sending circle radius variable to vertex shader uniform
+				
+				gl.useProgram(shaderProgram);
+				gl.enableVertexAttribArray(vertPos);
+				gl.drawArrays( gl.LINE_LOOP, 0, 4 );
+			}
+			
+///Initialise gl object and define viewport size
+			function initGL(canvas)
+			{
+				try
+				{
+					gl = canvas.getContext("experimental-webgl");
+					gl.viewportWidth = canvas.width;
+					gl.viewportHeight = canvas.height;
+				}catch(e){}
+				if(!gl)
+				{ alert("Could not initialise WebGL, people are dying."); }
+			}
+			
+///Init shader program
+			function initShaders() 
+			{
+				var fragmentShader = getShader(gl, "shader-fs");
+				var vertexShader = getShader(gl, "shader-vs");
+				
+				shaderProgram = gl.createProgram();
+				gl.attachShader(shaderProgram, vertexShader);
+				gl.attachShader(shaderProgram, fragmentShader);
+				gl.linkProgram(shaderProgram);
+				
+				if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) 
+				{
+					alert("Could not initialise shaders");
+				}
+			}
+			
+///Return shader code
+			function getShader(gl, id)
+			{
+				var shaderScript = document.getElementById(id); //No idea how to use jQuery syntax here.
+				if (!shaderScript) {
+					return null;
+					alert("Could not find shader source code!");
+				}
+				
+				var str = "";
+				var k = shaderScript.firstChild;
+				while (k) { //Reading shader code into str
+					if (k.nodeType == 3)
+					str += k.textContent;
+					k = k.nextSibling;
+				}
+					
+				var shader;
+				if (shaderScript.type == "x-shader/x-fragment") {
+					shader = gl.createShader(gl.FRAGMENT_SHADER);
+				} else if (shaderScript.type == "x-shader/x-vertex") {
+					shader = gl.createShader(gl.VERTEX_SHADER);
+				} else {
+					return null;
+				}
+				
+				gl.shaderSource(shader, str);
+				gl.compileShader(shader);
+				
+				if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+					alert(gl.getShaderInfoLog(shader));
+					return null;
+				}
+				
+				return shader;
+			}
+//Initialise buffers, put vertices data into gpu and stuff
+			function initBuffers() 
+			{
+				//Vertice data buffer
+				CircleVertPosBuffer = gl.createBuffer();
+				gl.bindBuffer(gl.ARRAY_BUFFER, CircleVertPosBuffer);
+				var vertices = []; //lets make empty array, will be filled in vertex shader.
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+				CircleVertPosBuffer.itemSize = 4; // vec4, as we need sin, cos and unit circle
+				CircleVertPosBuffer.numItems = CIRCLEVERTICES;
+				
+				//Angle data buffer
+				CircleAngles = gl.createBuffer();
+				gl.bindBuffer(gl.ARRAY_BUFFER, CircleAngles);
+				var angles = [ 0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0]; //let's make them in degrees
+				gl.bufferData(g.ARRAY_BUFFER, new Float32Array(angles), gl.STATIC_DRAW);
+				CircleAngles.itemSize = 1;
+				CircleAngles.nimItems = 8;
+			}
+			
+		</script>
+		
+		<script id="shader-vs" type="x-shader/x-vertex">
+			//Vertex shader code here
+			attribute float Angle;
+			attribute vec4 vPosition;
+			uniform float radius; //circle radius
+			
+			#define M_PI 3.1415926535897932384626433832795 //defining pi
+			
+			varying float v_Angle; //angle is passed from per-vertex data to fragment shader
+			
+			//Variation 1
+			/*
+			vec4 color(float angle)
+			{
+				
+			}
+			*/
+			
+			vec4 transform(float angle, out vec4 v_coords)
+			{
+				float angle_rad = angle *(M_PI / 180)
+				float c_sin = sin( angle_rad );
+				float c_cos = cos( angle_rad );
+				v_coords = vec4(c_sin, c_cos, 0.0, 0.0); //zeros are bcause we have circle center on 0.0
+			}
+			
+			void main()
+			{
+				v_Angle = Angle;
+				
+				gl_Position = /*here shud be coords n shit!*/;
+			}
+		</script>
+		
+		<script id="shader-fs" type="x-shader/x-fragment">
+			//Fragment shader code here
+			precision mediump float;
+			varying float v_Angle;
+			
+			//Variation 2
+			vec4 color(float angle)
+			{
+				
+			}
+			
+			void main()
+			{
+				gl_FragColor = color(v_Angle);
+			}
+		</script>
+	</body>
+</html>
