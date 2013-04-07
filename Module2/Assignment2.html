@@ -13,10 +13,10 @@
 ///Some global variables
 			var gl;
 			var shaderProgram;
-			var CircleVertPosBuffer; 
+			var CircleAngles; 
 			
-			const CircleRadius = 0.1;
-			const CIRCLEVERTICES = 11; //amount of vertices used to form circle approximation
+			const CircleRadius = 1.0;
+			const CIRCLEVERTICES = 8; //amount of vertices used to form circle approximation
 			
 ///"main" bunch of code
 			$(function() {
@@ -35,14 +35,14 @@
 			
 			function drawLineLoop()
 			{
-				var vertPos = gl.getAttribLocation(shaderProgram, "vPosition");
-				gl.bindBuffer(gl.ARRAY_BUFFER, CircleVertPosBuffer);
-				gl.vertexAttribPointer(vertPos, 4, gl.FLOAT, false, 0,0);
-				gl.uniform1f(gl.getUniformLocation(shaderProgram, "radius"), CircleRadius); //sending circle radius variable to vertex shader uniform
+				var vertAngle = gl.getAttribLocation(shaderProgram, "Angle");
+				gl.bindBuffer(gl.ARRAY_BUFFER, CircleAngles);
+				gl.vertexAttribPointer(vertAngle, 1, gl.FLOAT, false, 0,0);
 				
 				gl.useProgram(shaderProgram);
-				gl.enableVertexAttribArray(vertPos);
-				gl.drawArrays( gl.LINE_LOOP, 0, 4 );
+				gl.uniform1f(gl.getUniformLocation(shaderProgram, "radius"), CircleRadius); //sending circle radius variable to vertex shader uniform
+				gl.enableVertexAttribArray(vertAngle);
+				gl.drawArrays( gl.LINE_LOOP, 0, CIRCLEVERTICES );
 			}
 			
 ///Initialise gl object and define viewport size
@@ -114,29 +114,22 @@
 //Initialise buffers, put vertices data into gpu and stuff
 			function initBuffers() 
 			{
-				//Vertice data buffer
-				CircleVertPosBuffer = gl.createBuffer();
-				gl.bindBuffer(gl.ARRAY_BUFFER, CircleVertPosBuffer);
-				var vertices = []; //lets make empty array, will be filled in vertex shader.
-				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-				CircleVertPosBuffer.itemSize = 4; // vec4, as we need sin, cos and unit circle
-				CircleVertPosBuffer.numItems = CIRCLEVERTICES;
-				
 				//Angle data buffer
 				CircleAngles = gl.createBuffer();
 				gl.bindBuffer(gl.ARRAY_BUFFER, CircleAngles);
 				var angles = [ 0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0]; //let's make them in degrees
-				gl.bufferData(g.ARRAY_BUFFER, new Float32Array(angles), gl.STATIC_DRAW);
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(angles), gl.STATIC_DRAW);
 				CircleAngles.itemSize = 1;
-				CircleAngles.nimItems = 8;
+				CircleAngles.nimItems = CIRCLEVERTICES;
 			}
 			
 		</script>
 		
 		<script id="shader-vs" type="x-shader/x-vertex">
 			//Vertex shader code here
+			
 			attribute float Angle;
-			attribute vec4 vPosition;
+			//attribute vec4 vPosition;
 			uniform float radius; //circle radius
 			
 			#define M_PI 3.1415926535897932384626433832795 //defining pi
@@ -151,19 +144,19 @@
 			}
 			*/
 			
-			vec4 transform(float angle, out vec4 v_coords)
+			vec4 transform(float angle)
 			{
-				float angle_rad = angle *(M_PI / 180)
+				float angle_rad = angle *(M_PI / 180.0);
 				float c_sin = sin( angle_rad );
 				float c_cos = cos( angle_rad );
-				v_coords = vec4(c_sin, c_cos, 0.0, 0.0); //zeros are bcause we have circle center on 0.0
+				return vec4(c_sin, c_cos, 0.0, 0.0); //zeros are bcause we have circle center on 0.0
 			}
 			
 			void main()
 			{
 				v_Angle = Angle;
-				
-				gl_Position = /*here shud be coords n shit!*/;
+				vec4 v_coords = transform(Angle);
+				gl_Position = vec4( (v_coords.y * radius + v_coords.z), (v_coords.x * radius + v_coords.w), 0.0, 0.0);
 			}
 		</script>
 		
@@ -172,15 +165,16 @@
 			precision mediump float;
 			varying float v_Angle;
 			
+			/*
 			//Variation 2
 			vec4 color(float angle)
 			{
 				
 			}
-			
+			*/
 			void main()
 			{
-				gl_FragColor = color(v_Angle);
+				gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);//color(v_Angle);
 			}
 		</script>
 	</body>
