@@ -29,8 +29,6 @@
 				initGL(canvas);
 				initShaders();
 				initBuffers();
-				//gl.clearColor(0.0, 0.0, 0.0, 1.0);
-				//gl.enable(gl.DEPTH_TEST);
 				
 				WeCanDraw = true;
 				
@@ -194,14 +192,6 @@
 			//angle is passed from per-vertex data to fragment shader
 			varying float v_Angle;
 			
-			//Variation 1
-			/*
-			vec4 color(float angle)
-			{
-				
-			}
-			*/
-			
 			vec4 transform(float angle)
 			{
 				float angle_rad = angle *(M_PI / 180.0);
@@ -226,7 +216,6 @@
 			varying float v_Angle;
 			
 			
-			//Variation 2
 			vec4 color(float angle)
 			{
 				return vec4( (0.8 * log((1.0 + sin(angle))/(1.0 - sin(angle)))), (0.8 * log((1.0 + cos(angle))/(1.0 - cos(angle)))), (0.8 * log((1.0 + tan(angle))/(1.0 - tan(angle)))), 1.0 );
