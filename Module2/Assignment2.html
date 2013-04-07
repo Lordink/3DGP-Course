@@ -5,19 +5,21 @@
 	</head>
 	<body>
 		Input method:<br/>
-		<input type="radio" name="RenderType" value="1" checked>Line loop</input><br/>
-		<input type="radio" name="RenderType" value="2">Point sprites</input><br/>
-		<input type="radio" name="RenderType" value="3">Polygons</input><br/>
+		<input type="radio" name="RenderType" value="1" >Line loop</input><br/>
+		<input type="radio" name="RenderType" value="2" >Point sprites</input><br/>
+		<input type="radio" name="RenderType" value="3" >Polygons</input><br/>
 		<br/>
 		<canvas id="canvas" />
 		<script type="text/javascript">
 ///Some global variables
 			var gl;
 			var shaderProgram;
-			var CircleAngles; 
+			var CircleAngles;
+			
+			var WeCanDraw = false;
 			
 			const CircleRadius = 0.6;
-			const CIRCLEVERTICES = 16; //amount of vertices used to form circle approximation
+			const CIRCLEVERTICES = 30; //amount of vertices used to form circle approximation
 			
 ///"main" bunch of code
 			$(function() {
@@ -27,13 +29,30 @@
 				initGL(canvas);
 				initShaders();
 				initBuffers();
-				
-				gl.clearColor(0, 0, 0, 1.0); //CANVAS COLOR
-				gl.clear(gl.COLOR_BUFFER_BIT);
 				//gl.clearColor(0.0, 0.0, 0.0, 1.0);
 				//gl.enable(gl.DEPTH_TEST);
 				
-				drawLineLoop(); //Drawing line loop from indices using trigonometry, computed in vertex shader
+				WeCanDraw = true;
+				
+				
+			});
+			
+			$("input[name='RenderType']").change(function() {
+				if(WeCanDraw == true)
+				{
+					gl.clearColor(0, 0, 0, 1.0); //CANVAS COLOR
+					gl.clear(gl.COLOR_BUFFER_BIT);
+					if(this.value == 1){
+						drawLineLoop(); //Drawing line loop from using trigonometry, computed in vertex shader
+					}
+					else if(this.value == 2){
+						drawPointSprites(); //Drawing point sprites using trigonometry, computed in vertex shader
+						}
+					else{
+						drawPolygons(); //Drawing polygons using trigonometry, computed in vertex shader.
+					}
+				}
+				
 			});
 			
 			function drawLineLoop()
@@ -44,8 +63,35 @@
 				
 				gl.useProgram(shaderProgram);
 				gl.uniform1f(gl.getUniformLocation(shaderProgram, "radius"), CircleRadius); //sending circle radius variable to vertex shader uniform
+				gl.uniform1i(gl.getUniformLocation(shaderProgram, "rendtype"), 1); //sending circle radius variable to vertex shader uniform
 				gl.enableVertexAttribArray(vertAngle);
 				gl.drawArrays( gl.LINE_LOOP, 0, CIRCLEVERTICES );
+			}
+			
+			function drawPointSprites()
+			{
+				var vertAngle = gl.getAttribLocation(shaderProgram, "Angle");
+				gl.bindBuffer(gl.ARRAY_BUFFER, CircleAngles);
+				gl.vertexAttribPointer(vertAngle, 1, gl.FLOAT, false, 0,0);
+				
+				gl.useProgram(shaderProgram);
+				gl.uniform1f(gl.getUniformLocation(shaderProgram, "radius"), CircleRadius); //sending circle radius variable to vertex shader uniform
+				gl.uniform1i(gl.getUniformLocation(shaderProgram, "rendtype"), 2); //sending circle radius variable to vertex shader uniform
+				gl.enableVertexAttribArray(vertAngle);
+				gl.drawArrays( gl.POINT, 0, CIRCLEVERTICES );
+			}
+			
+			function drawPolygons()
+			{
+				var vertAngle = gl.getAttribLocation(shaderProgram, "Angle");
+				gl.bindBuffer(gl.ARRAY_BUFFER, CircleAngles);
+				gl.vertexAttribPointer(vertAngle, 1, gl.FLOAT, false, 0,0);
+				
+				gl.useProgram(shaderProgram);
+				gl.uniform1f(gl.getUniformLocation(shaderProgram, "radius"), CircleRadius); //sending circle radius variable to vertex shader uniform
+				gl.uniform1i(gl.getUniformLocation(shaderProgram, "rendtype"), 1); //sending circle radius variable to vertex shader uniform
+				gl.enableVertexAttribArray(vertAngle);
+				gl.drawArrays( gl.TRIANGLE_FAN, 0, CIRCLEVERTICES );
 			}
 			
 ///Initialise gl object and define viewport size
@@ -139,12 +185,14 @@
 			//Vertex shader code here
 			
 			attribute float Angle;
-			//attribute vec4 vPosition;
+			
 			uniform float radius; //circle radius
+			uniform int rendtype; //type of rendering, needed as we output points with PointSize
 			
 			#define M_PI 3.1415926535897932384626433832795 //defining pi
 			
-			varying float v_Angle; //angle is passed from per-vertex data to fragment shader
+			//angle is passed from per-vertex data to fragment shader
+			varying float v_Angle;
 			
 			//Variation 1
 			/*
@@ -164,8 +212,10 @@
 			
 			void main()
 			{
-				v_Angle = Angle;
+				v_Angle = Angle *(M_PI / 180.0);
 				vec4 v_coords = transform(Angle);
+				if(rendtype == 2)
+					gl_PointSize = 1.2;
 				gl_Position = vec4( (v_coords.y * radius + v_coords.z), (v_coords.x * radius + v_coords.w), 0.0, 1.0);
 			}
 		</script>
@@ -175,16 +225,16 @@
 			precision mediump float;
 			varying float v_Angle;
 			
-			/*
+			
 			//Variation 2
 			vec4 color(float angle)
 			{
-				
+				return vec4( (0.8 * log((1.0 + sin(angle))/(1.0 - sin(angle)))), (0.8 * log((1.0 + cos(angle))/(1.0 - cos(angle)))), (0.8 * log((1.0 + tan(angle))/(1.0 - tan(angle)))), 1.0 );
 			}
-			*/
+			
 			void main()
 			{
-				gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);//color(v_Angle);
+				gl_FragColor = color(v_Angle);
 			}
 		</script>
 	</body>
