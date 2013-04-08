@@ -8,6 +8,7 @@
 		<input type="radio" name="RenderType" value="1" >Line loop</input><br/>
 		<input type="radio" name="RenderType" value="2" >Point sprites</input><br/>
 		<input type="radio" name="RenderType" value="3" >Polygons</input><br/>
+		Number of vertices: <input type="number" name="quality" min="2" max="1000" value="30" />
 		<br/>
 		<canvas id="canvas" />
 		<script type="text/javascript">
@@ -19,7 +20,7 @@
 			var WeCanDraw = false;
 			
 			const CircleRadius = 0.6;
-			const CIRCLEVERTICES = 30; //amount of vertices used to form circle approximation
+			var CIRCLEVERTICES = 30; //amount of vertices used to form circle approximation
 			
 ///"main" bunch of code
 			$(function() {
@@ -35,23 +36,35 @@
 				
 			});
 			
+			$("input[name='quality']").change(function() {
+				CIRCLEVERTICES = this.value;
+				initBuffers();
+				StartDrawing($('input:radio[name=RenderType]:checked').val());
+			});
+			
 			$("input[name='RenderType']").change(function() {
 				if(WeCanDraw == true)
 				{
-					gl.clearColor(0, 0, 0, 1.0); //CANVAS COLOR
-					gl.clear(gl.COLOR_BUFFER_BIT);
-					if(this.value == 1){
-						drawLineLoop(); //Drawing line loop from using trigonometry, computed in vertex shader
-					}
-					else if(this.value == 2){
-						drawPointSprites(); //Drawing point sprites using trigonometry, computed in vertex shader
-						}
-					else{
-						drawPolygons(); //Drawing polygons using trigonometry, computed in vertex shader.
-					}
+					StartDrawing(this.value);
 				}
 				
 			});
+			
+			function StartDrawing( drawtype )
+			{
+				gl.clearColor(0, 0, 0, 1.0); //CANVAS COLOR
+				gl.clear(gl.COLOR_BUFFER_BIT);
+				if(drawtype == 1){
+					drawLineLoop(); //Drawing line loop from using trigonometry, computed in vertex shader
+				}
+				else if(drawtype == 2){
+					drawPointSprites(); //Drawing point sprites using trigonometry, computed in vertex shader
+				}
+				else{
+					drawPolygons(); //Drawing polygons using trigonometry, computed in vertex shader.
+				}
+			}
+			
 			
 			function drawLineLoop()
 			{
