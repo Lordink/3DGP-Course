@@ -207,7 +207,7 @@
 			
 			vec4 transform(float angle)
 			{
-				float angle_rad = angle *(M_PI / 180.0);
+				float angle_rad = radians(angle);
 				float c_sin = sin( angle_rad );
 				float c_cos = cos( angle_rad );
 				return vec4(c_sin, c_cos, 0.0, 0.0); //zeros are bcause we have circle center on 0.0
@@ -215,7 +215,7 @@
 			
 			void main()
 			{
-				v_Angle = Angle *(M_PI / 180.0);
+				v_Angle = radians(Angle);
 				vec4 v_coords = transform(Angle);
 				if(rendtype == 2)
 					gl_PointSize = 1.2;
