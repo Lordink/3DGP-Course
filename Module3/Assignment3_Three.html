@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src ="jquery-1.9.1.min.js"></script>
+		<script src ="three.js"></script>
+		<style type="text/css">
+         body {
+              // background-color: #000000;
+
+               overflow: hidden;
+           }
+       </style>
+	</head>
+	<body>
+		<div id="container"></div>
+		<script type="text/javascript">
+		//CODE DELAYED FOR LATER USE. FUNCTIONALITY IS BEING IMPLEMENTED IN Assignment3.html
+		
+			var WIDTH = window.innerWidth,
+				HEIGHT = window.innerHeight;
+			var Camera;
+			var Scene;
+			var Renderer;
+				
+			Init();
+			Animate();
+			
+
+			function Init()
+			{
+				var VIEW_ANGLE = 50, //vertical FOV. Horizontal is approx 80, I guess
+					ASPECT = WIDTH / HEIGHT,
+					NEAR = 0.1,
+					FAR = 100000;
+							
+				var $container = $('#container');
+				//Create cam, renderer and scene
+				Renderer = new THREE.WebGLRenderer({antialias:true});
+				Camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR );
+				Scene = new THREE.Scene();
+				
+				Camera.position.z = 0;
+				//Camera.position.x = -500;
+				
+				Renderer.setSize(WIDTH, HEIGHT); //Start renderer
+				
+				//Attach the renderer to DOM element
+				$container.append(Renderer.domElement);
+				
+				var CubeTex1 = new THREE.ImageUtils.loadTexture("/dfa.JPG");
+				
+				// create the sphere's material
+				var cubemat = new THREE.MeshLambertMaterial(
+				{   
+					map:CubeTex1,
+					side:THREE.DoubleSide
+				});
+				// create a new mesh with cube geometry -
+				var cube = new THREE.Mesh(
+				new THREE.CubeGeometry(7000,7000,7000, 1, 1, 1),cubemat);
+
+				Scene.add(cube);
+				
+				//cube.rotation.y += 0.5;
+				cube.rotation.x += 0.0;
+				
+				// create a point light
+				var pointLight = new THREE.PointLight( 0xFFFFFF );
+				
+				// set its position
+				pointLight.position.x = 10;
+				pointLight.position.y = 50;
+				pointLight.position.z = 130;
+				
+				// add to the scene
+				Scene.add(pointLight);
+			}
+			
+			function Animate()
+			{
+				Camera.rotation.y += 0.003;
+				requestAnimationFrame(Animate); //called by browser-supported timer loop. 
+				Renderer.render(Scene, Camera);
+			}
+		</script>
+	</body>
+</html>

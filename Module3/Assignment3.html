@@ -9,6 +9,10 @@
 ///Some global variables
 			var gl;
 			var shaderProgram;
+			var SkyCube = 0;
+			var CubeVertexPositionBuffer;
+			var CubeVertexColorBuffer;
+			var CubeVertexIndexBuffer;
 
 ///"main" bunch of code
 			$(function() {
@@ -20,7 +24,8 @@
 				initBuffers();
 				
 				gl.clearColor(0, 0, 0, 1.0); //CANVAS COLOR
-				gl.clear(gl.COLOR_BUFFER_BIT);
+				gl.enable(gl.DEPTH_TEST);
+				gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 				
 				drawSkyBox();
 			});
@@ -28,15 +33,22 @@
 			
 			function drawSkyBox()
 			{
-				var vertAngle = gl.getAttribLocation(shaderProgram, "Angle");
-				gl.bindBuffer(gl.ARRAY_BUFFER, CircleAngles);
-				gl.vertexAttribPointer(vertAngle, 1, gl.FLOAT, false, 0,0);
 				
 				gl.useProgram(shaderProgram);
-				gl.uniform1f(gl.getUniformLocation(shaderProgram, "radius"), CircleRadius); //sending circle radius variable to vertex shader uniform
-				gl.uniform1i(gl.getUniformLocation(shaderProgram, "rendtype"), 1); //sending circle radius variable to vertex shader uniform
-				gl.enableVertexAttribArray(vertAngle);
-				gl.drawArrays( gl.LINE_LOOP, 0, CIRCLEVERTICES );
+				shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+				gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+				shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
+				gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute);
+				
+				gl.bindBuffer(gl.ARRAY_BUFFER, CubeVertexPositionBuffer);
+				gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, CubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+				
+				gl.bindBuffer(gl.ARRAY_BUFFER, CubeVertexColorBuffer);
+				gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, CubeVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+				
+				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, CubeVertexIndexBuffer);
+				
+				gl.drawElements(gl.TRIANGLES, CubeVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 			}
 			
 ///Initialise gl object and define viewport size
@@ -108,69 +120,110 @@
 //Initialise buffers, put vertices data into gpu and stuff
 			function initBuffers() 
 			{
-				//Angle data buffer
-				CircleAngles = gl.createBuffer();
-				gl.bindBuffer(gl.ARRAY_BUFFER, CircleAngles);
-				var angles = new Array();
-				var angle = 0.0;
-				for(var i = 0; i < CIRCLEVERTICES; i++)
-				{
-					angles[i] = angle;
-					angle += 360/CIRCLEVERTICES;
+				CubeVertexPositionBuffer = gl.createBuffer();
+				gl.bindBuffer(gl.ARRAY_BUFFER, CubeVertexPositionBuffer);
+				vertices = [
+				// Front face
+				-1.0, -1.0,  1.0,
+				 1.0, -1.0,  1.0,
+				 1.0,  1.0,  1.0,
+				-1.0,  1.0,  1.0,
+
+				// Back face
+				-1.0, -1.0, -1.0,
+				-1.0,  1.0, -1.0,
+				1.0,  1.0, -1.0,
+				1.0, -1.0, -1.0,
+				
+				// Top face
+				-1.0,  1.0, -1.0,
+				-1.0,  1.0,  1.0,
+				1.0,  1.0,  1.0,
+				1.0,  1.0, -1.0,
+				
+				// Bottom face
+				-1.0, -1.0, -1.0,
+				1.0, -1.0, -1.0,
+				1.0, -1.0,  1.0,
+				-1.0, -1.0,  1.0,
+				
+				// Right face
+				1.0, -1.0, -1.0,
+				1.0,  1.0, -1.0,
+				1.0,  1.0,  1.0,
+				1.0, -1.0,  1.0,
+				
+				// Left face
+				-1.0, -1.0, -1.0,
+				-1.0, -1.0,  1.0,
+				-1.0,  1.0,  1.0,
+				-1.0,  1.0, -1.0
+				];
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+				CubeVertexPositionBuffer.itemSize = 3;
+				CubeVertexPositionBuffer.numItems = 24;
+				
+				CubeVertexColorBuffer = gl.createBuffer();
+				gl.bindBuffer(gl.ARRAY_BUFFER, CubeVertexColorBuffer);
+				colors = [
+				[1.0, 0.0, 0.0, 1.0], // Front face
+				[1.0, 1.0, 0.0, 1.0], // Back face
+				[0.0, 1.0, 0.0, 1.0], // Top face
+				[1.0, 0.5, 0.5, 1.0], // Bottom face
+				[1.0, 0.0, 1.0, 1.0], // Right face
+				[0.0, 0.0, 1.0, 1.0]  // Left face
+				];
+				var unpackedColors = [];
+				for (var i in colors) {
+					var color = colors[i];
+					for (var j=0; j < 4; j++) {
+						unpackedColors = unpackedColors.concat(color);
+					}
 				}
-				//var angles = [ 0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0]; //let's make them in degrees
-				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(angles), gl.STATIC_DRAW);
-				CircleAngles.itemSize = 1;
-				CircleAngles.nimItems = CIRCLEVERTICES;
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(unpackedColors), gl.STATIC_DRAW);
+				CubeVertexColorBuffer.itemSize = 4;
+				CubeVertexColorBuffer.numItems = 24;
+				
+				CubeVertexIndexBuffer = gl.createBuffer();
+				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, CubeVertexIndexBuffer);
+				var CubeVertexIndices = [
+				0, 1, 2,      0, 2, 3,    // Front face
+				4, 5, 6,      4, 6, 7,    // Back face
+				8, 9, 10,     8, 10, 11,  // Top face
+				12, 13, 14,   12, 14, 15, // Bottom face
+				16, 17, 18,   16, 18, 19, // Right face
+				20, 21, 22,   20, 22, 23  // Left face
+				];
+				gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(CubeVertexIndices), gl.STATIC_DRAW);
+				CubeVertexIndexBuffer.itemSize = 1;
+				CubeVertexIndexBuffer.numItems = 36;
 			}
 			
 		</script>
 		
 		<script id="shader-vs" type="x-shader/x-vertex">
-			//Vertex shader code here
+		//Vertex shader code here
+			attribute vec3 aVertexPosition;
+			attribute vec4 aVertexColor;
 			
-			attribute float Angle;
+			varying vec4 vColor;
 			
-			uniform float radius; //circle radius
-			uniform int rendtype; //type of rendering, needed as we output points with PointSize
-			
-			#define M_PI 3.1415926535897932384626433832795 //defining pi
-			
-			//angle is passed from per-vertex data to fragment shader
-			varying float v_Angle;
-			
-			vec4 transform(float angle)
+			void main(void) 
 			{
-				float angle_rad = radians(angle);
-				float c_sin = sin( angle_rad );
-				float c_cos = cos( angle_rad );
-				return vec4(c_sin, c_cos, 0.0, 0.0); //zeros are bcause we have circle center on 0.0
-			}
-			
-			void main()
-			{
-				v_Angle = radians(Angle);
-				vec4 v_coords = transform(Angle);
-				if(rendtype == 2)
-					gl_PointSize = 1.2;
-				gl_Position = vec4( (v_coords.y * radius + v_coords.z), (v_coords.x * radius + v_coords.w), 0.0, 1.0);
+				gl_Position = vec4(aVertexPosition, 1.0);
+				vColor = aVertexColor;
 			}
 		</script>
 		
 		<script id="shader-fs" type="x-shader/x-fragment">
-			//Fragment shader code here
+		//Fragment shader code here
 			precision mediump float;
-			varying float v_Angle;
-			
-			
-			vec4 color(float angle)
+
+			varying vec4 vColor;
+
+			void main(void) 
 			{
-				return vec4( (0.8 * log((1.0 + sin(angle))/(1.0 - sin(angle)))), (0.8 * log((1.0 + cos(angle))/(1.0 - cos(angle)))), (0.8 * log((1.0 + tan(angle))/(1.0 - tan(angle)))), 1.0 );
-			}
-			
-			void main()
-			{
-				gl_FragColor = color(v_Angle);
+				gl_FragColor = vColor;
 			}
 		</script>
 	</body>
