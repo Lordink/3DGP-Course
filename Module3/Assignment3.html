@@ -69,14 +69,14 @@
 				gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 				gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 				//
-				mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+				mat4.perspective(90, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
 				
 				mat4.identity(mvMatrix);
-				
-				mat4.translate(mvMatrix, [3.0, 0.0, 0.0]);
+				//mat4.scale(mvMatrix, [10.0, 10.0, 10.0]);
+				mat4.translate(mvMatrix, [0.0, 0.0, 0.0]);
 
 				mvPushMatrix();
-				mat4.rotate(mvMatrix, degToRad(Cube), [1, 1, 1]);
+				mat4.rotate(mvMatrix, degToRad(Cube), [0, 1, 0]);
 				
 				gl.bindBuffer(gl.ARRAY_BUFFER, CubeVertexPositionBuffer);
 				gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, CubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -178,7 +178,7 @@
 				
 			}
 			
-			//Initialise buffers, put vertices data into gpu and stuff
+//Initialise buffers, put vertices data into gpu and stuff
 			function initBuffers() 
 			{
 				CubeVertexPositionBuffer = gl.createBuffer();
@@ -264,7 +264,7 @@
 				var timeNow = new Date().getTime();
 				if (lastTime != 0) {
 					var elapsed = timeNow - lastTime;
-					Cube -= (75 * elapsed) / 1000.0;
+					Cube -= (30 * elapsed) / 1000.0;
 				}
 				lastTime = timeNow;
 			}
