@@ -2,6 +2,7 @@
 <html>
 	<head>
 		<script src ="jquery-1.9.1.min.js"></script>
+		<script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
 	</head>
 	<body>
 		<canvas id="canvas" />
@@ -9,36 +10,73 @@
 ///Some global variables
 			var gl;
 			var shaderProgram;
-			var SkyCube = 0;
 			var CubeVertexPositionBuffer;
 			var CubeVertexColorBuffer;
 			var CubeVertexIndexBuffer;
-
+			var Cube = 0;
+			var mvMatrix = mat4.create();
+			var mvMatrixStack = [];
+			var pMatrix = mat4.create();
+			var lastTime = 0;
+			
+			
+			function mvPushMatrix() 
+			{
+				var copy = mat4.create();
+				mat4.set(mvMatrix, copy);
+				mvMatrixStack.push(copy);
+			}
+			
+			function mvPopMatrix() 
+			{
+				if (mvMatrixStack.length == 0) {
+					throw "Invalid popMatrix!";
+				}
+				mvMatrix = mvMatrixStack.pop();
+			}
+			
+			
+			function setMatrixUniforms() 
+			{
+				gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
+				gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
+			}
+			
 ///"main" bunch of code
 			$(function() {
 				var canvas = $("canvas")[0];
-				canvas.height = 720;
-				canvas.width = 720; //720p :)
+				canvas.height = 960;
+				canvas.width = 960;
 				initGL(canvas);
 				initShaders();
 				initBuffers();
+				initTextures();
 				
 				gl.clearColor(0, 0, 0, 1.0); //CANVAS COLOR
 				gl.enable(gl.DEPTH_TEST);
-				gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-				
-				drawSkyBox();
+				tick();
 			});
 			
+//Ticks each time in some fraction of second to redraw and rotate our cube
+			function tick() {
+				requestAnimationFrame(tick);
+				drawSkyBox();
+				animate();
+			}
 			
 			function drawSkyBox()
 			{
+				gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+				gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+				//
+				mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
 				
-				gl.useProgram(shaderProgram);
-				shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
-				gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
-				shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
-				gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute);
+				mat4.identity(mvMatrix);
+				
+				mat4.translate(mvMatrix, [3.0, 0.0, 0.0]);
+
+				mvPushMatrix();
+				mat4.rotate(mvMatrix, degToRad(Cube), [1, 1, 1]);
 				
 				gl.bindBuffer(gl.ARRAY_BUFFER, CubeVertexPositionBuffer);
 				gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, CubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -47,8 +85,15 @@
 				gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, CubeVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
 				
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, CubeVertexIndexBuffer);
-				
+				setMatrixUniforms();
 				gl.drawElements(gl.TRIANGLES, CubeVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+				
+				mvPopMatrix();
+			}
+			
+			//Translate degrees to radians
+			function degToRad(degrees) {
+				return degrees * Math.PI / 180;
 			}
 			
 ///Initialise gl object and define viewport size
@@ -79,6 +124,16 @@
 				{
 					alert("Could not initialise shaders");
 				}
+				
+				gl.useProgram(shaderProgram);
+				shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+				gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+				
+				shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
+				gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute);
+				
+				shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+				shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
 			}
 			
 ///Return shader code
@@ -117,7 +172,13 @@
 				
 				return shader;
 			}
-//Initialise buffers, put vertices data into gpu and stuff
+
+			function initTextures()
+			{
+				
+			}
+			
+			//Initialise buffers, put vertices data into gpu and stuff
 			function initBuffers() 
 			{
 				CubeVertexPositionBuffer = gl.createBuffer();
@@ -128,7 +189,7 @@
 				 1.0, -1.0,  1.0,
 				 1.0,  1.0,  1.0,
 				-1.0,  1.0,  1.0,
-
+				
 				// Back face
 				-1.0, -1.0, -1.0,
 				-1.0,  1.0, -1.0,
@@ -197,20 +258,30 @@
 				gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(CubeVertexIndices), gl.STATIC_DRAW);
 				CubeVertexIndexBuffer.itemSize = 1;
 				CubeVertexIndexBuffer.numItems = 36;
-			}
+			}			
 			
+			function animate() {
+				var timeNow = new Date().getTime();
+				if (lastTime != 0) {
+					var elapsed = timeNow - lastTime;
+					Cube -= (75 * elapsed) / 1000.0;
+				}
+				lastTime = timeNow;
+			}
 		</script>
 		
 		<script id="shader-vs" type="x-shader/x-vertex">
 		//Vertex shader code here
 			attribute vec3 aVertexPosition;
 			attribute vec4 aVertexColor;
-			
+
+			uniform mat4 uMVMatrix;
+			uniform mat4 uPMatrix;
+
 			varying vec4 vColor;
-			
-			void main(void) 
-			{
-				gl_Position = vec4(aVertexPosition, 1.0);
+
+			void main(void) {
+				gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
 				vColor = aVertexColor;
 			}
 		</script>
