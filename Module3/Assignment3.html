@@ -15,7 +15,6 @@
 			var gl;
 			var shaderProgram;
 			var CubeVertexPositionBuffer;
-			var CubeVertexColorBuffer;
 			var CubeVertexIndexBuffer;
 			
 			var Cube = 0;
@@ -35,7 +34,6 @@
 				mat4.set(mvMatrix, copy);
 				mvMatrixStack.push(copy);
 			}
-			
 			function mvPopMatrix() 
 			{
 				if (mvMatrixStack.length == 0) {
@@ -43,8 +41,6 @@
 				}
 				mvMatrix = mvMatrixStack.pop();
 			}
-			
-			
 			function setMatrixUniforms() 
 			{
 				gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
@@ -60,8 +56,7 @@
 				initShaders();
 				initBuffers();
 				initTextures();
-				
-				gl.clearColor(0, 0, 0, 1.0); //CANVAS COLOR
+
 				gl.enable(gl.DEPTH_TEST);
 				tick();
 			});
@@ -71,6 +66,16 @@
 				requestAnimationFrame(tick);
 				drawSkyBox();
 				animate();
+			}
+			
+			//draws 2 triangles with selected parameters
+			function draw_CubeSide(StartVertexNumber, TextureIndex) //works with 2-byte values
+			{
+				gl.activeTexture(gl.TEXTURE0);
+				gl.bindTexture(gl.TEXTURE_2D, Tex1[TextureIndex]);
+				gl.uniform1i(shaderProgram.samplerUniform, 0);
+				gl.drawElements(gl.TRIANGLES, CubeVertexIndexBuffer.numItems/6, gl.UNSIGNED_SHORT, StartVertexNumber*2);
+				gl.bindTexture(gl.TEXTURE_2D, null);
 			}
 			
 			function drawSkyBox()
@@ -102,45 +107,12 @@
 				//1045
 				
 				//Draw one cube side for each texture. Pretty straight-forward, but at least works :-)
-				gl.activeTexture(gl.TEXTURE0);
-				gl.bindTexture(gl.TEXTURE_2D, Tex1[1]);
-				gl.uniform1i(shaderProgram.samplerUniform, 0);
-				gl.drawElements(gl.TRIANGLES, CubeVertexIndexBuffer.numItems/6, gl.UNSIGNED_SHORT, 0);
-				gl.bindTexture(gl.TEXTURE_2D, null);
-				
-				gl.activeTexture(gl.TEXTURE0);
-				gl.bindTexture(gl.TEXTURE_2D, Tex1[0]);
-				gl.uniform1i(shaderProgram.samplerUniform, 0);
-				gl.drawElements(gl.TRIANGLES, CubeVertexIndexBuffer.numItems/6, gl.UNSIGNED_SHORT, 12);
-				gl.bindTexture(gl.TEXTURE_2D, null);
-				
-				//Sky:
-				gl.activeTexture(gl.TEXTURE0);
-				gl.bindTexture(gl.TEXTURE_2D, Tex1[2]);
-				gl.uniform1i(shaderProgram.samplerUniform, 0);
-				gl.drawElements(gl.TRIANGLES, CubeVertexIndexBuffer.numItems/6, gl.UNSIGNED_SHORT, 24);
-				gl.bindTexture(gl.TEXTURE_2D, null);
-				
-				//Bottom:
-				gl.activeTexture(gl.TEXTURE0);
-				gl.bindTexture(gl.TEXTURE_2D, Tex1[3]);
-				gl.uniform1i(shaderProgram.samplerUniform, 0);
-				gl.drawElements(gl.TRIANGLES, CubeVertexIndexBuffer.numItems/6, gl.UNSIGNED_SHORT, 36);
-				gl.bindTexture(gl.TEXTURE_2D, null);
-				
-				gl.activeTexture(gl.TEXTURE0);
-				gl.bindTexture(gl.TEXTURE_2D, Tex1[4]);
-				gl.uniform1i(shaderProgram.samplerUniform, 0);
-				gl.drawElements(gl.TRIANGLES, CubeVertexIndexBuffer.numItems/6, gl.UNSIGNED_SHORT, 48);
-				gl.bindTexture(gl.TEXTURE_2D, null);
-				
-				gl.activeTexture(gl.TEXTURE0);
-				gl.bindTexture(gl.TEXTURE_2D, Tex1[5]);
-				gl.uniform1i(shaderProgram.samplerUniform, 0);
-				gl.drawElements(gl.TRIANGLES, CubeVertexIndexBuffer.numItems/6, gl.UNSIGNED_SHORT, 60);
-				gl.bindTexture(gl.TEXTURE_2D, null);			
-				
-				
+				draw_CubeSide(0, 1);
+				draw_CubeSide(6, 0);
+				draw_CubeSide(12, 2);
+				draw_CubeSide(18, 3);
+				draw_CubeSide(24, 4);
+				draw_CubeSide(30, 5);
 				
 				mvPopMatrix();
 			}
