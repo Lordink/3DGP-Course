@@ -28,7 +28,7 @@
 
 			function Init()
 			{
-				var VIEW_ANGLE = 55, //vertical FOV. Horizontal is approx 80, I guess
+				var VIEW_ANGLE = 110, //vertical FOV. Horizontal is approx 80, I guess
 					ASPECT = WIDTH / HEIGHT,
 					NEAR = 0.1,
 					FAR = 100000;
@@ -51,14 +51,13 @@
 				var CubeTextures = [
 					'negx.jpg',
 					'posx.jpg',
-					'posy.jpg',
-					'negy.jpg',
+					'negy180.jpg',
+					'posy180.jpg',
 					'posz.jpg',
 					'negz.jpg'
 				],
 				
-				Cubemap = THREE.ImageUtils.
-				loadTextureCube(CubeTextures);
+				Cubemap = THREE.ImageUtils.loadTextureCube(CubeTextures);
 				
 				Cubemap.format = THREE.RGBFormat;
 				

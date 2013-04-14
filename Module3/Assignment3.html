@@ -103,9 +103,7 @@
 				//Load vertex indexes for drawElements
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, CubeVertexIndexBuffer);
 				setMatrixUniforms();
-				
-				//1045
-				
+
 				//Draw one cube side for each texture. Pretty straight-forward, but at least works :-)
 				draw_CubeSide(0, 1);
 				draw_CubeSide(6, 0);
@@ -281,8 +279,7 @@
 //Initialise buffers, put vertices data into gpu and stuff
 			function initBuffers() 
 			{
-			//REMOVE COLORBUFFER TOTALLY
-			
+
 				//Texture support:
 				cubeVertexTextureCoordBuffer = gl.createBuffer();
 				gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
