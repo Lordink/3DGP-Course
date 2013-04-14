@@ -3,21 +3,28 @@
 	<head>
 		<script src ="jquery-1.9.1.min.js"></script>
 		<script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
+		<script type="text/javascript" src ="RequestAnimationFrame.js"></script>
 	</head>
 	<body>
 		<canvas id="canvas" />
 		<script type="text/javascript">
+		//RequestAnimationFrame.js is included to provide compatibility with firefox.
+		
 ///Some global variables
 			var gl;
 			var shaderProgram;
 			var CubeVertexPositionBuffer;
 			var CubeVertexColorBuffer;
 			var CubeVertexIndexBuffer;
+			
 			var Cube = 0;
+			var lastTime = 0;
+			
 			var mvMatrix = mat4.create();
 			var mvMatrixStack = [];
 			var pMatrix = mat4.create();
-			var lastTime = 0;
+		
+			var Tex1;
 			
 			
 			function mvPushMatrix() 
@@ -175,12 +182,69 @@
 
 			function initTextures()
 			{
+				Tex1 = gl.createTexture();
+				Tex1.image = new Image();
+				Tex1.image.onload = function() { //once texture is loaded, initialise it
+					gl.bindTexture(gl.TEXTURE_2D, Tex1);
+					gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+					gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, Tex1.image);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+					gl.bindTexture(gl.TEXTURE_2D, null);
+				}
 				
+				Tex1.image.src = "posy.jpg";
 			}
 			
 //Initialise buffers, put vertices data into gpu and stuff
 			function initBuffers() 
 			{
+			//REMOVE COLORBUFFER TOTALLY
+			
+				//Texture support:
+				cubeVertexTextureCoordBuffer = gl.createBuffer();
+				gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
+				var textureCoords = [
+				// Front face
+				0.0, 0.0,
+				1.0, 0.0,
+				1.0, 1.0,
+				0.0, 1.0,
+				
+				// Back face
+				1.0, 0.0,
+				1.0, 1.0,
+				0.0, 1.0,
+				0.0, 0.0,
+				
+				// Top face
+				0.0, 1.0,
+				0.0, 0.0,
+				1.0, 0.0,
+				1.0, 1.0,
+				
+				// Bottom face
+				1.0, 1.0,
+				0.0, 1.0,
+				0.0, 0.0,
+				1.0, 0.0,
+				
+				// Right face
+				1.0, 0.0,
+				1.0, 1.0,
+				0.0, 1.0,
+				0.0, 0.0,
+				
+				// Left face
+				0.0, 0.0,
+				1.0, 0.0,
+				1.0, 1.0,
+				0.0, 1.0,
+				];
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+				cubeVertexTextureCoordBuffer.itemSize = 2;
+				cubeVertexTextureCoordBuffer.numItems = 24;
+				
 				CubeVertexPositionBuffer = gl.createBuffer();
 				gl.bindBuffer(gl.ARRAY_BUFFER, CubeVertexPositionBuffer);
 				vertices = [
