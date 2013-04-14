@@ -11,6 +11,7 @@
 		//RequestAnimationFrame.js is included to provide compatibility with firefox.
 		
 ///Some global variables
+///There are too much of them, will improve code structure later
 			var gl;
 			var shaderProgram;
 			var CubeVertexPositionBuffer;
@@ -23,8 +24,9 @@
 			var mvMatrix = mat4.create();
 			var mvMatrixStack = [];
 			var pMatrix = mat4.create();
-		
-			var Tex1;
+			
+			//Textures:
+			var Tex1 = new Array();
 			
 			
 			function mvPushMatrix() 
@@ -75,25 +77,70 @@
 			{
 				gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 				gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-				//
-				mat4.perspective(90, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
 				
+				mat4.perspective(70, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+				
+				//Set mvMatrix as identity matrix and translate it to 0 0 0 coords
 				mat4.identity(mvMatrix);
-				//mat4.scale(mvMatrix, [10.0, 10.0, 10.0]);
 				mat4.translate(mvMatrix, [0.0, 0.0, 0.0]);
 
 				mvPushMatrix();
 				mat4.rotate(mvMatrix, degToRad(Cube), [0, 1, 0]);
 				
+				//Load vertex coords
 				gl.bindBuffer(gl.ARRAY_BUFFER, CubeVertexPositionBuffer);
 				gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, CubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 				
-				gl.bindBuffer(gl.ARRAY_BUFFER, CubeVertexColorBuffer);
-				gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, CubeVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+				//Load texture coords 
+				gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
+				gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, cubeVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
 				
+				//Load vertex indexes for drawElements
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, CubeVertexIndexBuffer);
 				setMatrixUniforms();
-				gl.drawElements(gl.TRIANGLES, CubeVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+				
+				//1045
+				
+				//Draw one cube side for each texture. Pretty straight-forward, but at least works :-)
+				gl.activeTexture(gl.TEXTURE0);
+				gl.bindTexture(gl.TEXTURE_2D, Tex1[1]);
+				gl.uniform1i(shaderProgram.samplerUniform, 0);
+				gl.drawElements(gl.TRIANGLES, CubeVertexIndexBuffer.numItems/6, gl.UNSIGNED_SHORT, 0);
+				gl.bindTexture(gl.TEXTURE_2D, null);
+				
+				gl.activeTexture(gl.TEXTURE0);
+				gl.bindTexture(gl.TEXTURE_2D, Tex1[0]);
+				gl.uniform1i(shaderProgram.samplerUniform, 0);
+				gl.drawElements(gl.TRIANGLES, CubeVertexIndexBuffer.numItems/6, gl.UNSIGNED_SHORT, 12);
+				gl.bindTexture(gl.TEXTURE_2D, null);
+				
+				//Sky:
+				gl.activeTexture(gl.TEXTURE0);
+				gl.bindTexture(gl.TEXTURE_2D, Tex1[2]);
+				gl.uniform1i(shaderProgram.samplerUniform, 0);
+				gl.drawElements(gl.TRIANGLES, CubeVertexIndexBuffer.numItems/6, gl.UNSIGNED_SHORT, 24);
+				gl.bindTexture(gl.TEXTURE_2D, null);
+				
+				//Bottom:
+				gl.activeTexture(gl.TEXTURE0);
+				gl.bindTexture(gl.TEXTURE_2D, Tex1[3]);
+				gl.uniform1i(shaderProgram.samplerUniform, 0);
+				gl.drawElements(gl.TRIANGLES, CubeVertexIndexBuffer.numItems/6, gl.UNSIGNED_SHORT, 36);
+				gl.bindTexture(gl.TEXTURE_2D, null);
+				
+				gl.activeTexture(gl.TEXTURE0);
+				gl.bindTexture(gl.TEXTURE_2D, Tex1[4]);
+				gl.uniform1i(shaderProgram.samplerUniform, 0);
+				gl.drawElements(gl.TRIANGLES, CubeVertexIndexBuffer.numItems/6, gl.UNSIGNED_SHORT, 48);
+				gl.bindTexture(gl.TEXTURE_2D, null);
+				
+				gl.activeTexture(gl.TEXTURE0);
+				gl.bindTexture(gl.TEXTURE_2D, Tex1[5]);
+				gl.uniform1i(shaderProgram.samplerUniform, 0);
+				gl.drawElements(gl.TRIANGLES, CubeVertexIndexBuffer.numItems/6, gl.UNSIGNED_SHORT, 60);
+				gl.bindTexture(gl.TEXTURE_2D, null);			
+				
+				
 				
 				mvPopMatrix();
 			}
@@ -136,8 +183,8 @@
 				shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
 				gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
 				
-				shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
-				gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute);
+				shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord");
+				gl.enableVertexAttribArray(shaderProgram.textureCoordAttribute);
 				
 				shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
 				shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
@@ -182,18 +229,81 @@
 
 			function initTextures()
 			{
-				Tex1 = gl.createTexture();
-				Tex1.image = new Image();
-				Tex1.image.onload = function() { //once texture is loaded, initialise it
-					gl.bindTexture(gl.TEXTURE_2D, Tex1);
-					gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-					gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, Tex1.image);
-					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-					gl.bindTexture(gl.TEXTURE_2D, null);
+				//Loading picts into array of textures. Combersome, but best I can do for now, now willing to use cubemapping
+				for(i = 0; i < 6; i++)
+				{
+					Tex1[i] = gl.createTexture();
+					Tex1[i].image = new Image();
+					switch(i)
+					{ 
+						case 0:
+							Tex1[0].image.src = "posx.jpg";
+							break;
+						case 1:
+							Tex1[i].image.src = "negx.jpg";
+							break;
+						case 2:
+							Tex1[i].image.src = "posy.jpg";
+							break;
+						case 3:
+							Tex1[i].image.src = "negy.jpg";
+							break;
+						case 4:
+							Tex1[i].image.src = "posz.jpg";
+							break;
+						case 5:
+							Tex1[i].image.src = "negz.jpg";
+							break;
+					}
 				}
-				
-				Tex1.image.src = "posy.jpg";
+					Tex1[0].image.onload = function() { //once texture is loaded, initialise it
+						gl.bindTexture(gl.TEXTURE_2D, Tex1[0]);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+						gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+						gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, Tex1[0].image);
+						gl.bindTexture(gl.TEXTURE_2D, null);
+					}
+					Tex1[1].image.onload = function() { //once texture is loaded, initialise it
+						gl.bindTexture(gl.TEXTURE_2D, Tex1[1]);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+						gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+						gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, Tex1[1].image);
+						gl.bindTexture(gl.TEXTURE_2D, null);
+					}
+					Tex1[2].image.onload = function() { //once texture is loaded, initialise it
+						gl.bindTexture(gl.TEXTURE_2D, Tex1[2]);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+						gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+						gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, Tex1[2].image);
+						gl.bindTexture(gl.TEXTURE_2D, null);
+					}
+					Tex1[3].image.onload = function() { //once texture is loaded, initialise it
+						gl.bindTexture(gl.TEXTURE_2D, Tex1[3]);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+						gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+						gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, Tex1[3].image);
+						gl.bindTexture(gl.TEXTURE_2D, null);
+					}
+					Tex1[4].image.onload = function() { //once texture is loaded, initialise it
+						gl.bindTexture(gl.TEXTURE_2D, Tex1[4]);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+						gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+						gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, Tex1[4].image);
+						gl.bindTexture(gl.TEXTURE_2D, null);
+					}
+					Tex1[5].image.onload = function() { //once texture is loaded, initialise it
+						gl.bindTexture(gl.TEXTURE_2D, Tex1[5]);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+						gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+						gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, Tex1[5].image);
+						gl.bindTexture(gl.TEXTURE_2D, null);
+					}				
 			}
 			
 //Initialise buffers, put vertices data into gpu and stuff
@@ -204,7 +314,7 @@
 				//Texture support:
 				cubeVertexTextureCoordBuffer = gl.createBuffer();
 				gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
-				var textureCoords = [
+				var textureCoords = [ //Coordinates for textures mapping
 				// Front face
 				0.0, 0.0,
 				1.0, 0.0,
@@ -218,16 +328,20 @@
 				0.0, 0.0,
 				
 				// Top face
-				0.0, 1.0,
+				/*0.0, 1.0,
+				0.0, 0.0,
+				1.0, 0.0,
+				1.0, 1.0,*/
 				0.0, 0.0,
 				1.0, 0.0,
 				1.0, 1.0,
+				0.0, 1.0,
 				
 				// Bottom face
-				1.0, 1.0,
 				0.0, 1.0,
 				0.0, 0.0,
 				1.0, 0.0,
+				1.0, 1.0,
 				
 				// Right face
 				1.0, 0.0,
@@ -288,27 +402,6 @@
 				CubeVertexPositionBuffer.itemSize = 3;
 				CubeVertexPositionBuffer.numItems = 24;
 				
-				CubeVertexColorBuffer = gl.createBuffer();
-				gl.bindBuffer(gl.ARRAY_BUFFER, CubeVertexColorBuffer);
-				colors = [
-				[1.0, 0.0, 0.0, 1.0], // Front face
-				[1.0, 1.0, 0.0, 1.0], // Back face
-				[0.0, 1.0, 0.0, 1.0], // Top face
-				[1.0, 0.5, 0.5, 1.0], // Bottom face
-				[1.0, 0.0, 1.0, 1.0], // Right face
-				[0.0, 0.0, 1.0, 1.0]  // Left face
-				];
-				var unpackedColors = [];
-				for (var i in colors) {
-					var color = colors[i];
-					for (var j=0; j < 4; j++) {
-						unpackedColors = unpackedColors.concat(color);
-					}
-				}
-				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(unpackedColors), gl.STATIC_DRAW);
-				CubeVertexColorBuffer.itemSize = 4;
-				CubeVertexColorBuffer.numItems = 24;
-				
 				CubeVertexIndexBuffer = gl.createBuffer();
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, CubeVertexIndexBuffer);
 				var CubeVertexIndices = [
@@ -337,28 +430,31 @@
 		<script id="shader-vs" type="x-shader/x-vertex">
 		//Vertex shader code here
 			attribute vec3 aVertexPosition;
-			attribute vec4 aVertexColor;
+			 attribute vec2 aTextureCoord;
 
-			uniform mat4 uMVMatrix;
-			uniform mat4 uPMatrix;
+			 uniform mat4 uMVMatrix;
+			 uniform mat4 uPMatrix;
 
-			varying vec4 vColor;
+			 varying vec2 vTextureCoord;
 
-			void main(void) {
+			 void main(void) 
+			 {
 				gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-				vColor = aVertexColor;
-			}
+				vTextureCoord = aTextureCoord;
+			  }
 		</script>
 		
 		<script id="shader-fs" type="x-shader/x-fragment">
 		//Fragment shader code here
 			precision mediump float;
 
-			varying vec4 vColor;
-
+			varying vec2 vTextureCoord;
+			
+			uniform sampler2D uSampler;
+			
 			void main(void) 
 			{
-				gl_FragColor = vColor;
+				gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
 			}
 		</script>
 	</body>
