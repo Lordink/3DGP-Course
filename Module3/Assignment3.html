@@ -207,7 +207,7 @@
 					switch(i)
 					{ 
 						case 0:
-							Tex1[0].image.src = "posx.jpg";
+							Tex1[i].image.src = "posx.jpg";
 							break;
 						case 1:
 							Tex1[i].image.src = "negx.jpg";
@@ -226,54 +226,22 @@
 							break;
 					}
 				}
-					Tex1[0].image.onload = function() { //once texture is loaded, initialise it
-						gl.bindTexture(gl.TEXTURE_2D, Tex1[0]);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-						gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-						gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, Tex1[0].image);
-						gl.bindTexture(gl.TEXTURE_2D, null);
-					}
-					Tex1[1].image.onload = function() { //once texture is loaded, initialise it
-						gl.bindTexture(gl.TEXTURE_2D, Tex1[1]);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-						gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-						gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, Tex1[1].image);
-						gl.bindTexture(gl.TEXTURE_2D, null);
-					}
-					Tex1[2].image.onload = function() { //once texture is loaded, initialise it
-						gl.bindTexture(gl.TEXTURE_2D, Tex1[2]);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-						gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-						gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, Tex1[2].image);
-						gl.bindTexture(gl.TEXTURE_2D, null);
-					}
-					Tex1[3].image.onload = function() { //once texture is loaded, initialise it
-						gl.bindTexture(gl.TEXTURE_2D, Tex1[3]);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-						gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-						gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, Tex1[3].image);
-						gl.bindTexture(gl.TEXTURE_2D, null);
-					}
-					Tex1[4].image.onload = function() { //once texture is loaded, initialise it
-						gl.bindTexture(gl.TEXTURE_2D, Tex1[4]);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-						gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-						gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, Tex1[4].image);
-						gl.bindTexture(gl.TEXTURE_2D, null);
-					}
-					Tex1[5].image.onload = function() { //once texture is loaded, initialise it
-						gl.bindTexture(gl.TEXTURE_2D, Tex1[5]);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-						gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-						gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, Tex1[5].image);
-						gl.bindTexture(gl.TEXTURE_2D, null);
-					}				
+					Tex1[0].image.onload = function() { TextureOnload(Tex1[0])}
+					Tex1[1].image.onload = function() { TextureOnload(Tex1[1])}
+					Tex1[2].image.onload = function() { TextureOnload(Tex1[2])}
+					Tex1[3].image.onload = function() { TextureOnload(Tex1[3])}
+					Tex1[4].image.onload = function() { TextureOnload(Tex1[4])}
+					Tex1[5].image.onload = function() { TextureOnload(Tex1[5])}	
+			}
+			
+			function TextureOnload(Texture)
+			{
+				gl.bindTexture(gl.TEXTURE_2D, Texture);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+				gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, Texture.image);
+				gl.bindTexture(gl.TEXTURE_2D, null);
 			}
 			
 //Initialise buffers, put vertices data into gpu and stuff
