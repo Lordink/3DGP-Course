@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src ="jquery-1.9.1.min.js"></script>
+		<script src ="three.js"></script>
+		<style type="text/css">
+         body {
+              // background-color: #000000;
+
+               overflow: hidden;
+           }
+       </style>
+	</head>
+	<body>
+		<div id="container"></div>
+		<script type="text/javascript">
+		//NOT WORKING IN CHROME FOR UNKNOWN REASON. TEST IN FIREFOX.
+		
+			var WIDTH = window.innerWidth,
+				HEIGHT = window.innerHeight;
+			var Camera;
+			var Scene;
+			var Renderer;
+				
+			Init();
+			Animate();
+			
+
+			function Init()
+			{
+				var VIEW_ANGLE = 110, //vertical FOV. Horizontal is approx 80, I guess
+					ASPECT = WIDTH / HEIGHT,
+					NEAR = 0.1,
+					FAR = 100000;
+							
+				var $container = $('#container');
+				//Create cam, renderer and scene
+				Renderer = new THREE.WebGLRenderer({antialias:true});
+				Camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR );
+				Scene = new THREE.Scene();
+				
+				Camera.position.z = 0;
+				Camera.rotation.z = 3.16;
+				//Camera.position.x = -500;
+				
+				Renderer.setSize(WIDTH, HEIGHT); //Start renderer
+				
+				//Attach the renderer to DOM element
+				$container.append(Renderer.domElement);
+				
+				var CubeTextures = [
+					'negx.jpg',
+					'posx.jpg',
+					'negy180.jpg',
+					'posy180.jpg',
+					'posz.jpg',
+					'negz.jpg'
+				],
+				
+				Cubemap = THREE.ImageUtils.loadTextureCube(CubeTextures);
+				
+				Cubemap.format = THREE.RGBFormat;
+				
+				// create the sphere's material
+				var cubemat = new THREE.MeshBasicMaterial(
+				{   
+					envMap: Cubemap,
+					side:THREE.DoubleSide
+				});
+				// create a new mesh with cube geometry -
+				var cube = new THREE.Mesh(
+				new THREE.CubeGeometry(100,100,100, 1, 1, 1),cubemat);
+
+				Scene.add(cube);
+				
+				//cube.rotation.y += 0.5;
+				cube.rotation.x += 0.0;
+				
+				Renderer.render(Scene, Camera);
+			}
+			
+			function Animate()
+			{
+				Camera.rotation.y += 0.003;
+				requestAnimationFrame(Animate); //called by browser-supported timer loop. 
+				Renderer.render(Scene, Camera);
+			}
+		</script>
+	</body>
+</html>
