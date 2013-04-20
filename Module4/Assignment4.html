@@ -5,8 +5,6 @@
 		<script src ="three.js"></script>
 		<style type="text/css">
          body {
-              // background-color: #000000;
-
                overflow: hidden;
            }
        </style>
@@ -14,13 +12,20 @@
 	<body>
 		<div id="container"></div>
 		<script type="text/javascript">
-		//NOT WORKING IN CHROME FOR UNKNOWN REASON. TEST IN FIREFOX.
 		
 			var WIDTH = window.innerWidth,
 				HEIGHT = window.innerHeight;
 			var Camera;
 			var Scene;
 			var Renderer;
+			var mouse = { 
+				down: false,
+				prevY: 0,
+				prevX: 0
+						}
+			var keysPressed = [];
+			var camobject = null;
+			var MOUSESENS = 0.005;
 				
 			Init();
 			Animate();
@@ -28,63 +33,117 @@
 
 			function Init()
 			{
-				var VIEW_ANGLE = 110, //vertical FOV. Horizontal is approx 80, I guess
+				var VIEW_ANGLE = 50, //vertical FOV. Horizontal is approx 80, I guess
 					ASPECT = WIDTH / HEIGHT,
 					NEAR = 0.1,
 					FAR = 100000;
 							
 				var $container = $('#container');
-				//Create cam, renderer and scene
+				
+			//Create cam, renderer and scene
 				Renderer = new THREE.WebGLRenderer({antialias:true});
 				Camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR );
 				Scene = new THREE.Scene();
-				
-				Camera.position.z = 0;
-				Camera.rotation.z = 3.16;
-				//Camera.position.x = -500;
-				
+				camobject = new THREE.Object3D();
+				camobject.add(Camera); //making cam a child of camobject
+				camobject.position.z = 5;
+				camobject.position.y = 1.0;
+				Scene.add(camobject);
 				Renderer.setSize(WIDTH, HEIGHT); //Start renderer
 				
-				//Attach the renderer to DOM element
+			//Attach the renderer to DOM element
 				$container.append(Renderer.domElement);
 				
-				var CubeTextures = [
-					'negx.jpg',
-					'posx.jpg',
-					'negy180.jpg',
-					'posy180.jpg',
-					'posz.jpg',
-					'negz.jpg'
-				],
+				t_Floor = THREE.ImageUtils.loadTexture("Tiles1sl1024_soften.jpg");
 				
-				Cubemap = THREE.ImageUtils.loadTextureCube(CubeTextures);
+				//Texture filtering:
+				t_Floor.anisotropy = Renderer.getMaxAnisotropy();
 				
-				Cubemap.format = THREE.RGBFormat;
+				t_Floor.wrapS = THREE.RepeatWrapping;
+				t_Floor.wrapT = THREE.RepeatWrapping;
+				t_Floor.repeat.set(32,32);
 				
-				// create the sphere's material
-				var cubemat = new THREE.MeshBasicMaterial(
-				{   
-					envMap: Cubemap,
-					side:THREE.DoubleSide
-				});
-				// create a new mesh with cube geometry -
+			// create a new mesh with cube geometry -
 				var cube = new THREE.Mesh(
-				new THREE.CubeGeometry(100,100,100, 1, 1, 1),cubemat);
-
+				new THREE.CubeGeometry(100,0.2,100, 1, 1, 1), new THREE.MeshBasicMaterial(
+				{   
+					map: t_Floor,
+					transparent: true
+				}));
+				
+			
+				
 				Scene.add(cube);
 				
-				//cube.rotation.y += 0.5;
-				cube.rotation.x += 0.0;
-				
 				Renderer.render(Scene, Camera);
+				
+		///Handle mouse input
+				document.onmousedown = function(ev)
+				{
+					mouse.down = true;
+					mouse.prevY = ev.pageY;
+					mouse.prevX = ev.pageX;
+				}
+				document.onmouseup = function(ev)
+				{
+					mouse.down = false;
+				}
+				document.onmousemove = function(ev)
+				{
+					if( mouse.down )
+					{
+						var rot = (ev.pageY - mouse.prevY) * MOUSESENS;
+						var rotY = (ev.pageX - mouse.prevX) * MOUSESENS;
+						camobject.rotation.y -= rotY;
+					//Make sure we dont "overlook" down or up:
+						if( ( (Camera.rotation.x <= 1.5) || (rot > 0.0) ) && ( (Camera.rotation.x >= -1.5) || (rot < 0.0)))
+						{
+							Camera.rotation.x -= rot;
+						}
+						
+						mouse.prevY = ev.pageY;
+						mouse.prevX = ev.pageX;
+					}
+				}
+		///Handle keyboard input
+				document.onkeydown = function(event){
+					keysPressed[event.keyCode] = true;
+				}
+				document.onkeyup = function(event){
+					keysPressed[event.keyCode] = false;
+				}
+				
+				
 			}
 			
 			function Animate()
 			{
-				Camera.rotation.y += 0.003;
-				requestAnimationFrame(Animate); //called by browser-supported timer loop. 
+				Renderer.setClearColorHex(0x000000, 1.0);
+				Renderer.clear(true);
 				Renderer.render(Scene, Camera);
+				if( keysPressed["W".charCodeAt(0)] == true ){
+					var dir = new THREE.Vector3(0,0,-1);
+					var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
+					camobject.translate(0.1, dirW);
+				}
+				if( keysPressed["S".charCodeAt(0)] == true ){
+					var dir = new THREE.Vector3(0,0,-1);
+					var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
+					camobject.translate(-0.1, dirW);
+				}
+				if( keysPressed["A".charCodeAt(0)] == true ){
+					var dir = new THREE.Vector3(-1,0,0);
+					var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
+					camobject.translate(0.1, dirW);
+				}
+				if( keysPressed["D".charCodeAt(0)] == true ){
+					var dir = new THREE.Vector3(1,0,0);
+					var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
+					camobject.translate(0.1, dirW);
+				}
+				requestAnimationFrame(Animate); //called by browser-supported timer loop. 
 			}
+			
 		</script>
 	</body>
 </html>
