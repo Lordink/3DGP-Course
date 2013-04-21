@@ -183,7 +183,7 @@
 				}
 				
 				if(RoboHand != null){
-					RoboHand.Wave();
+					RoboHand.Wave(Date.now());
 				}
 				requestAnimationFrame(Animate); //called by browser-supported timer loop. 
 			}
@@ -191,12 +191,11 @@
 		///Making a class for a hand. Will simplify the code and overall usage
 			function Hand(Scene, x, y, z)
 			{
-				this.ShoulderRotAxis = 1; //Direction of a shoulder rotation, should b multiplied by -1 each 180 degrees, so that hand goes back and forth
 				//Starting with shoulder as a parent for alll other arm parts. Adding it as a child to a scene.
 				this.Shoulder = new THREE.Mesh(new THREE.SphereGeometry(0.2,30,30), new THREE.MeshBasicMaterial( {color: 0xff0000} ));
 				Scene.add(this.Shoulder);
 				this.Shoulder.position.x = x;
-				this.Shoulder.position.y = y + 1.1; //Height so that whole arm can be upper then floor
+				this.Shoulder.position.y = y + 1.3; //Height so that whole arm can be upper then floor
 				this.Shoulder.position.z = z;
 				this.Shoulder.rotation.x = 0;
 				this.Shoulder.rotation.y = 0;
@@ -222,7 +221,7 @@
 				this.Elbow.add(this.LowerArm);
 				
 				this.Wrist = new THREE.Mesh(new THREE.CubeGeometry(0.3,0.32,0.18, 1, 1, 1), new THREE.MeshBasicMaterial( {color: 0x00ffff} ));
-				this.Wrist.position.x = x + 0.35;
+				this.Wrist.position.x = x + 0.39;
 				this.Wrist.position.y = y;
 				this.Wrist.position.z = z - 2.01;
 				this.LowerArm.add(this.Wrist);
@@ -242,14 +241,14 @@
 				this.Fingers[3].position.x -= 0.2;
 				
 			///Method of waving:
-				this.Wave = function()
+				this.Wave = function(Delta)
 				{
 					//Let's start with some simple upperhand movement
-					if( (this.Shoulder.rotation.z >= Math.PI) || (this.Shoulder.rotation.z < 0)){
-						this.ShoulderRotAxis *= -1;
-					}
-						this.Shoulder.rotation.z += 0.02 * this.ShoulderRotAxis;
-
+					this.Shoulder.rotation.z = Math.PI/2 + (Math.cos( Delta * 0.001 ))* 1.7;
+					//Next, let's work on elbow rotation
+					this.Elbow.rotation.z = Math.sin(Delta * 0.0015 );
+					//At last, let's make the wrist move
+					this.Wrist.rotation.y = Math.cos(Delta * 0.0017 );
 				}
 			}
 			
