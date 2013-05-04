@@ -28,6 +28,8 @@
 			var MOUSESENS = 0.005;
 			var Ruins = [];
 			var RoboHand = null;
+			
+			var zPivot;
 				
 			Init();
 			Animate();
@@ -65,9 +67,22 @@
 				t_Floor.wrapT = THREE.RepeatWrapping;
 				t_Floor.repeat.set(32,32);
 				
+			//Adding pivots for easier navigation
+				zPivot = new THREE.ArrowHelper( new THREE.Vector3( 0, 1, 0 ), new THREE.Vector3( 0, 0, 1 ), 0.1);
+				zPivot.setColor(0x0000ff);
+				Camera.add(zPivot);
+				zPivot.position.set(0.30, -0.15, -0.7);
+				//y and z pivots we will just add to z one.
+				var yPivot = new THREE.ArrowHelper( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, 1 ), 1);
+				zPivot.add(yPivot);
+				yPivot.rotation.x = -1.57;
+				yPivot.position.z = -0.0;
+				yPivot.setColor(0x00ff00);
+				//yPivot.setDirection(0,0,0);
+				
 			// create a new mesh with cube geometry -
 				var cube = new THREE.Mesh(
-				new THREE.CubeGeometry(50,0.2,50, 1, 1, 1), new THREE.MeshBasicMaterial({   
+				new THREE.CubeGeometry(50,0.2,50, 1, 1, 1), new THREE.MeshLambertMaterial({   
 					map: t_Floor,
 					transparent: true
 				}));
@@ -76,11 +91,17 @@
 				
 				Scene.add(cube);
 				
+			////Adding a directional light
+				var directionalLight = new THREE.DirectionalLight( 0x88aaff, 1.0 );
+				directionalLight.position.set(1,1,-1);
+				Scene.add(directionalLight);
+				
+				
 			//Mesh loading functionality
 				var loader = new THREE.JSONLoader();
 				function handler(geometry, materials)
 				{
-					Ruins.push( new THREE.Mesh(geometry, new THREE.MeshBasicMaterial(
+					Ruins.push( new THREE.Mesh(geometry, new THREE.MeshLambertMaterial(
 					{map: THREE.ImageUtils.loadTexture("../rock.jpg"), transparent: true}
 					)));
 					checkIsAllLoaded();
@@ -195,7 +216,7 @@
 			}
 			
 			var Movement = 0.0;
-
+				
 			function Animate()
 			{
 				var Moving = false;
@@ -204,6 +225,12 @@
 				Renderer.render(Scene, Camera);
 				if(RoboHand)
 					RoboHand.Wave(Date.now());
+				
+				//var dir = camobject.matrixRotationWorld; 
+				//var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
+				//zPivot.translate(0.01, dirW);
+				zPivot.rotation.z = camobject.rotation.y;
+				zPivot.rotation.x = 1.57 -Camera.rotation.x;
 				
 				if( keysPressed["W".charCodeAt(0)] == true ){
 					var dir = new THREE.Vector3(0,0,-1);
