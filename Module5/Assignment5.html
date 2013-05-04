@@ -68,17 +68,26 @@
 				t_Floor.repeat.set(32,32);
 				
 			//Adding pivots for easier navigation
-				zPivot = new THREE.ArrowHelper( new THREE.Vector3( 0, 1, 0 ), new THREE.Vector3( 0, 0, 1 ), 0.1);
+				zPivot = new THREE.ArrowHelper( new THREE.Vector3( 0, 1, 0 ), new THREE.Vector3( 0, 0, 1 ), 0.03);
 				zPivot.setColor(0x0000ff);
 				Camera.add(zPivot);
-				zPivot.position.set(0.30, -0.15, -0.7);
+				
+				zPivot.position.set(0.23, -0.12, -0.35);
+				
 				//y and z pivots we will just add to z one.
 				var yPivot = new THREE.ArrowHelper( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, 1 ), 1);
 				zPivot.add(yPivot);
 				yPivot.rotation.x = -1.57;
 				yPivot.position.z = -0.0;
 				yPivot.setColor(0x00ff00);
-				//yPivot.setDirection(0,0,0);
+				
+				var xPivot = new THREE.ArrowHelper( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, 1 ), 1);
+				zPivot.add(xPivot);
+				xPivot.rotation.x = 0;
+				xPivot.rotation.z = -1.57;
+				xPivot.position.z = 0.0;
+				xPivot.setColor(0xff0000);
+				
 				
 			// create a new mesh with cube geometry -
 				var cube = new THREE.Mesh(
