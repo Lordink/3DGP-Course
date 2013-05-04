@@ -67,8 +67,7 @@
 				
 			// create a new mesh with cube geometry -
 				var cube = new THREE.Mesh(
-				new THREE.CubeGeometry(50,0.2,50, 1, 1, 1), new THREE.MeshBasicMaterial(
-				{   
+				new THREE.CubeGeometry(50,0.2,50, 1, 1, 1), new THREE.MeshBasicMaterial({   
 					map: t_Floor,
 					transparent: true
 				}));
@@ -97,7 +96,7 @@
 							Scene.add(mesh);
 						});
 						Ruins[0].position.z = 13;
-						Ruins[1].position.x = -8;
+						Ruins[1].position.x = -11;
 						Ruins[2].position.z = 8;
 						Ruins[2].position.x = -5;
 						Ruins[4].position.z = 2;
@@ -112,7 +111,49 @@
 				loader.load("../meshes/ruins35.js", handler);
 				
 				
-				//Now adding the hand!
+			///Skybox addition
+				
+				AddSkyBox(Scene, camobject);
+				
+				function AddSkyBox(scene, camera)
+				{
+					var skyboxMaterials = [];
+					skyboxMaterials.push( new THREE.MeshBasicMaterial({ 
+						map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_west.png") 
+					}));
+					skyboxMaterials.push( new THREE.MeshBasicMaterial({ 
+						map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_east.png") 
+					}));
+					skyboxMaterials.push( new THREE.MeshBasicMaterial({ 
+						map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_up.png") 
+					}));
+					skyboxMaterials.push( new THREE.MeshBasicMaterial({ 
+						map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_down.png") 
+					}));
+					skyboxMaterials.push( new THREE.MeshBasicMaterial({ 
+						map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_north.png") 
+					}));
+					skyboxMaterials.push( new THREE.MeshBasicMaterial({ 
+						map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_south.png") 
+					}));
+					
+					
+					$.each(skyboxMaterials, function(i, d){ 	
+						d.side = THREE.BackSide;
+						d.depthWrite = false;
+					});
+					var sbmfm = new THREE.MeshFaceMaterial( skyboxMaterials );
+					
+					var skybox = new THREE.Mesh
+					(
+					new THREE.CubeGeometry(1024,1024,1024), 
+					sbmfm
+					);
+					skybox.position = camera.position;
+					scene.add(skybox);
+				}
+				
+			///Now adding the hand
 				RoboHand = new Hand(Scene, 0,0,2);
 				
 				Renderer.render(Scene, Camera);
@@ -137,10 +178,7 @@
 						camobject.rotation.y -= rotY;
 					//Make sure we dont "overlook" down or up:
 						if( ( (Camera.rotation.x <= 1.5) || (rot > 0.0) ) && ( (Camera.rotation.x >= -1.5) || (rot < 0.0)))
-						{
 							Camera.rotation.x -= rot;
-						}
-						
 						mouse.prevY = ev.pageY;
 						mouse.prevX = ev.pageX;
 					}
@@ -156,35 +194,48 @@
 				
 			}
 			
+			var Movement = 0.0;
+
 			function Animate()
 			{
+				var Moving = false;
 				Renderer.setClearColorHex(0x000000, 1.0);
 				Renderer.clear(true);
 				Renderer.render(Scene, Camera);
+				if(RoboHand)
+					RoboHand.Wave(Date.now());
+				
 				if( keysPressed["W".charCodeAt(0)] == true ){
 					var dir = new THREE.Vector3(0,0,-1);
 					var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
 					camobject.translate(0.1, dirW);
+					Moving = true;
+					
 				}
 				if( keysPressed["S".charCodeAt(0)] == true ){
 					var dir = new THREE.Vector3(0,0,-1);
 					var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
+					Moving = true;
 					camobject.translate(-0.1, dirW);
 				}
 				if( keysPressed["A".charCodeAt(0)] == true ){
 					var dir = new THREE.Vector3(-1,0,0);
 					var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
+					Moving = true;
 					camobject.translate(0.1, dirW);
 				}
 				if( keysPressed["D".charCodeAt(0)] == true ){
 					var dir = new THREE.Vector3(1,0,0);
 					var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
+					Moving = true;
 					camobject.translate(0.1, dirW);
 				}
 				
-				if(RoboHand != null){
-					RoboHand.Wave(Date.now());
+				if(Moving){
+					Movement += 0.14;
+					camobject.position.y = Math.sin(Movement)*0.1 + 1;
 				}
+				
 				requestAnimationFrame(Animate); //called by browser-supported timer loop. 
 			}
 			
