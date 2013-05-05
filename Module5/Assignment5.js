@@ -166,7 +166,7 @@ $(function()
 	new THREE.CubeGeometry(950,0.2,950, 1, 1, 1), 
 	new THREE.MeshPhongMaterial({   
 		map: t_Floor,
-		transparent: true}));
+		transparent: true})/*GroundShader*/);
 	
 	Scene.add(cube);
 	
@@ -177,9 +177,7 @@ $(function()
 	var loader = new THREE.JSONLoader();
 	function handler(geometry, materials)
 	{
-		Ruins.push( new THREE.Mesh(geometry, GroundShader /*new THREE.MeshLambertMaterial(
-		{map: THREE.ImageUtils.loadTexture("../rock.jpg"), transparent: true}
-		)*/));
+		Ruins.push( new THREE.Mesh(geometry, GroundShader));
 		checkIsAllLoaded();
 		
 	}
