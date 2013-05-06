@@ -1,4 +1,4 @@
-var WIDTH = window.innerWidth - 50,
+var WIDTH = window.innerWidth -15,
 	HEIGHT = window.innerWidth * 9/16;
 var Camera;
 var Scene;
