@@ -74,7 +74,6 @@ $(function()
 		Scene.add(skybox);
 	}
 	
-	
 	t_Floor = THREE.ImageUtils.loadTexture("../SquaredConcrete1.jpg");
 	
 	//Texture filtering:
@@ -127,8 +126,6 @@ $(function()
 	spotLight.position.z += 1.0;
 	spotLight.target = spotLightObj;
 	Scene.add(spotLight);
-	
-
 
 ////Custom shaders code
 	
