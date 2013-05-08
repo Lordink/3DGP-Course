@@ -17,7 +17,6 @@ var spotLight;
 var spotLightObj;
 var zPivot;
 
-var faulttest;
 
 var SpotLightDirection = new THREE.Vector3(1,0,0);
 var GSuniforms;
