@@ -1,8 +1,8 @@
 var WIDTH = window.innerWidth -15,
 	HEIGHT = window.innerWidth * 9/16;
-var Camera;
-var Scene;
-var Renderer;
+///var Camera;
+///var Scene;
+///var Renderer;
 var mouse = { 
 	down: false,
 	prevY: 0,
@@ -20,6 +20,115 @@ var zPivot;
 
 var SpotLightDirection = new THREE.Vector3(1,0,0);
 var GSuniforms;
+
+
+//Creating a class, contating the whole map with methods and properties
+function Map(camera, scene, renderer)
+{
+	/// Constructor:--------------------------------------------------- ///
+	this.Camera = camera;
+	this.Scene = scene;
+	this.Renderer = renderer;
+	this.SkyBox = null;
+	
+	this.camobject = new THREE.Object3D();
+	this.camobject.add(this.Camera); //making cam a child of camobject
+	this.camobject.position.z = 5;
+	this.camobject.position.y = 1.0;
+	this.Scene.add(this.camobject);
+	/// ----------------------------------------------------------------///
+	
+	this.Animate = function() { /* NOT FINISHED */
+		var Moving = false;
+		this.Renderer.setClearColorHex(0x000000, 1.0);
+		this.Renderer.clear(true);
+		this.Renderer.render(Scene, Camera);
+		if(this.RoboHand)
+		this.RoboHand.Wave(Date.now());
+		
+		///Update spotlight position
+		/*  ///WORK ON THIS LATER
+		spotLight.position = camobject.position;
+		var dir = new THREE.Vector3(0,0,-1);
+		var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
+		spotLight.target.position = dirW;
+		
+		var SpotTarget = spotLight.target.position.clone();
+		var Wstarget = Camera.localToWorld(SpotTarget);
+		SpotLightDirection = Wstarget.sub(spotLight.position);
+		SpotLightDirection.multiplyScalar(-1);
+		GSuniforms.u_SpotLightDirection.value = SpotLightDirection.clone(); //I was figuring out for 3 hrs that you have to do this
+		var NewLightLoc = new THREE.Vector3(spotLight.position.x, spotLight.position.y, spotLight.position.z); 
+		GSuniforms.u_SpotLightPosition.value = NewLightLoc.clone();
+		
+		
+		///Rotate pivots	
+		zPivot.rotation.z = camobject.rotation.y;
+		zPivot.rotation.x = 1.57 -Camera.rotation.x;
+		
+		if( keysPressed["W".charCodeAt(0)] == true ){
+			var dir = new THREE.Vector3(0,0,-1);
+			var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
+			camobject.translate(0.1, dirW);
+			Moving = true;
+			
+		}
+		if( keysPressed["S".charCodeAt(0)] == true ){
+			var dir = new THREE.Vector3(0,0,-1);
+			var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
+			Moving = true;
+			camobject.translate(-0.1, dirW);
+			
+			//alert(SpotLightDirection.x + " " + SpotLightDirection.y + " " + SpotLightDirection.z); 
+		}
+		if( keysPressed["A".charCodeAt(0)] == true ){
+			var dir = new THREE.Vector3(-1,0,0);
+			var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
+			Moving = true;
+			camobject.translate(0.1, dirW);
+		}
+		if( keysPressed["D".charCodeAt(0)] == true ){
+			var dir = new THREE.Vector3(1,0,0);
+			var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
+			Moving = true;
+			camobject.translate(0.1, dirW);
+		}
+		
+		if(Moving){
+			Movement += 0.14;
+			camobject.position.y = Math.sin(Movement)*0.1 + 1;
+		}
+		*/
+		requestAnimationFrame(this.Animate); //called by browser-supported timer loop. 
+	}
+	
+	this.AddSkyBox = function( Materials, Size ) { /* NOT FINISHED */
+		/* var skyboxMaterials = [];  ///TO BE MADE IN MAIN CODE
+		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_west.png") }));
+		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_east.png") }));
+		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_up.png") }));
+		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_down.png") }));
+		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_north.png") }));
+		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_south.png") }));
+		*/
+		
+		$.each(Materials, function(i, d){ 	
+			d.side = THREE.BackSide;
+			d.depthWrite = false;
+		});
+		var sbmfm = new THREE.MeshFaceMaterial( Materials );
+		sbmfm.depthWrite = false;
+		this.Skybox = new THREE.Mesh
+		(
+			new THREE.CubeGeometry(Size.x, Size.y, Size.z, 1, 1, 1), 
+			sbmfm
+		);
+		this.Skybox.position = this.camobject.position;
+		this.Scene.add(this.Skybox);
+	}
+
+}
+
 
 $(function()
 {
@@ -50,28 +159,7 @@ $(function()
 	
 	function AddSkyBox()
 	{
-		var skyboxMaterials = [];
-		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_west.png") }));
-		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_east.png") }));
-		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_up.png") }));
-		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_down.png") }));
-		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_north.png") }));
-		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_south.png") }));
 		
-		
-		$.each(skyboxMaterials, function(i, d){ 	
-			d.side = THREE.BackSide;
-			d.depthWrite = false;
-		});
-		var sbmfm = new THREE.MeshFaceMaterial( skyboxMaterials );
-		sbmfm.depthWrite = false;
-		var skybox = new THREE.Mesh
-		(
-			new THREE.CubeGeometry(40,40,40,1,1,1), 
-			sbmfm
-		);
-		skybox.position = camobject.position;
-		Scene.add(skybox);
 	}
 	
 	t_Floor = THREE.ImageUtils.loadTexture("../SquaredConcrete1.jpg");
@@ -257,129 +345,5 @@ var Movement = 0.0;
 	
 function Animate()
 {
-	var Moving = false;
-	Renderer.setClearColorHex(0x000000, 1.0);
-	Renderer.clear(true);
-	Renderer.render(Scene, Camera);
-	if(RoboHand)
-		RoboHand.Wave(Date.now());
-
-///Update spotlight position
-	spotLight.position = camobject.position;
-	var dir = new THREE.Vector3(0,0,-1);
-	var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
-	spotLight.target.position = dirW;
-	
-	var SpotTarget = spotLight.target.position.clone();
-	var Wstarget = Camera.localToWorld(SpotTarget);
-	SpotLightDirection = Wstarget.sub(spotLight.position);
-	SpotLightDirection.multiplyScalar(-1);
-	GSuniforms.u_SpotLightDirection.value = SpotLightDirection.clone(); //I was figuring out for 3 hrs that you have to do this
-	var NewLightLoc = new THREE.Vector3(spotLight.position.x, spotLight.position.y, spotLight.position.z); 
-	GSuniforms.u_SpotLightPosition.value = NewLightLoc.clone();
-	
-	
-///Rotate pivots	
-	zPivot.rotation.z = camobject.rotation.y;
-	zPivot.rotation.x = 1.57 -Camera.rotation.x;
-	
-	if( keysPressed["W".charCodeAt(0)] == true ){
-		var dir = new THREE.Vector3(0,0,-1);
-		var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
-		camobject.translate(0.1, dirW);
-		Moving = true;
-		
-	}
-	if( keysPressed["S".charCodeAt(0)] == true ){
-		var dir = new THREE.Vector3(0,0,-1);
-		var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
-		Moving = true;
-		camobject.translate(-0.1, dirW);
-
-		//alert(SpotLightDirection.x + " " + SpotLightDirection.y + " " + SpotLightDirection.z); 
-	}
-	if( keysPressed["A".charCodeAt(0)] == true ){
-		var dir = new THREE.Vector3(-1,0,0);
-		var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
-		Moving = true;
-		camobject.translate(0.1, dirW);
-	}
-	if( keysPressed["D".charCodeAt(0)] == true ){
-		var dir = new THREE.Vector3(1,0,0);
-		var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
-		Moving = true;
-		camobject.translate(0.1, dirW);
-	}
-	
-	if(Moving){
-		Movement += 0.14;
-		camobject.position.y = Math.sin(Movement)*0.1 + 1;
-	}
-	
-	requestAnimationFrame(Animate); //called by browser-supported timer loop. 
+	///
 }
-
-///Making a class for a hand. Will simplify the code and overall usage
-function Hand(Scene, x, y, z)
-{
-	//Starting with shoulder as a parent for alll other arm parts. Adding it as a child to a scene.
-	this.Shoulder = new THREE.Mesh(new THREE.SphereGeometry(0.2,30,30), new THREE.MeshLambertMaterial( {color: 0xff0000} ));
-	Scene.add(this.Shoulder);
-	this.Shoulder.position.x = x;
-	this.Shoulder.position.y = y + 1.3; //Height so that whole arm can be upper then floor
-	this.Shoulder.position.z = z;
-	this.Shoulder.rotation.x = 0;
-	this.Shoulder.rotation.y = 0;
-	this.Shoulder.rotation.z = 0;
-	///WRITE HERE ROTATION MANUALY
-	
-	this.UpperArm = new THREE.Mesh(new THREE.CubeGeometry(0.5,0.15,0.15, 1, 1, 1), new THREE.MeshLambertMaterial( {color: 0x00ff00} ));
-	this.UpperArm.position.x = x + 0.4;
-	this.UpperArm.position.y = y;
-	this.UpperArm.position.z = z - 2.01;
-	this.Shoulder.add(this.UpperArm);
-	
-	this.Elbow = new THREE.Mesh(new THREE.SphereGeometry(0.15,30,30), new THREE.MeshLambertMaterial( {color: 0xff00ff} ));
-	this.Elbow.position.x = x + 0.3;
-	this.Elbow.position.y = y;
-	this.Elbow.position.z = z - 2.01;
-	this.UpperArm.add(this.Elbow);
-	
-	this.LowerArm = new THREE.Mesh(new THREE.CubeGeometry(0.5,0.15,0.15, 1, 1, 1), new THREE.MeshLambertMaterial( {color: 0x0000ff} ));
-	this.LowerArm.position.x = x + 0.3;
-	this.LowerArm.position.y = y;
-	this.LowerArm.position.z = z - 2.01;
-	this.Elbow.add(this.LowerArm);
-	
-	this.Wrist = new THREE.Mesh(new THREE.CubeGeometry(0.3,0.32,0.18, 1, 1, 1), new THREE.MeshLambertMaterial( {color: 0x00ffff} ));
-	this.Wrist.position.x = x + 0.39;
-	this.Wrist.position.y = y;
-	this.Wrist.position.z = z - 2.01;
-	this.LowerArm.add(this.Wrist);
-	
-	this.Fingers = [new THREE.Mesh(new THREE.CubeGeometry(0.3,0.05,0.05, 1, 1, 1), new THREE.MeshLambertMaterial( {color: 0xffff0f} )),
-				   new THREE.Mesh(new THREE.CubeGeometry(0.3,0.05,0.05, 1, 1, 1), new THREE.MeshLambertMaterial( {color: 0xffff0f} )),
-				   new THREE.Mesh(new THREE.CubeGeometry(0.3,0.05,0.05, 1, 1, 1), new THREE.MeshLambertMaterial( {color: 0xffff0f} )),
-				   new THREE.Mesh(new THREE.CubeGeometry(0.4,0.05,0.05, 1, 1, 1), new THREE.MeshLambertMaterial( {color: 0xffff0f} ))];
-	for( i = 0; i < this.Fingers.length; i++){
-		this.Fingers[i].position.x = x + 0.28;
-		this.Fingers[i].position.y = y +0.11 - (0.1 * i);
-		this.Fingers[i].position.z = z - 2.01;
-		this.Wrist.add(this.Fingers[i]);
-	}
-	//Thumb:
-	this.Fingers[3].rotation.z -= 0.7;
-	this.Fingers[3].position.x -= 0.2;
-	
-///Method of waving:
-	this.Wave = function(Delta)
-	{ 
-		//Let's start with some simple upperhand movement
-		this.Shoulder.rotation.z = Math.PI/2 + (Math.cos( Delta * 0.001 ))* 1.7;
-		//Next, let's work on elbow rotation
-		this.Elbow.rotation.z = Math.sin(Delta * 0.0015 );
-		//At last, let's make the wrist move
-		this.Wrist.rotation.y = Math.cos(Delta * 0.0017 );
-	}
-}
-
