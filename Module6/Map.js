@@ -13,10 +13,13 @@ function Map(camera, scene, renderer)
 	this.DirLight = null;
 	this.AmbientLight = null;
 	this.SpotLight = null;
+	this.SpotLightDirection = null;
 	this.ShaderMaterials = [];
 	this.ShaderUniforms = [];
 	this.Meshes = [];
 	this.MeshLoader = new THREE.JSONLoader();
+	this.keysPressed = [];
+	this.Movement = 0.0;
 	
 	this.camobject = new THREE.Object3D();
 	this.camobject.add(this.Camera); //making cam a child of camobject
@@ -26,80 +29,72 @@ function Map(camera, scene, renderer)
 	/// ----------------------------------------------------------------///
 	
 	//Continious update of positions and rotation
-	this.Animate = function() { /* NOT FINISHED */
+	this.Animate = function() {
 		var Moving = false;
-		this.Renderer.setClearColorHex(0x000000, 1.0);
-		this.Renderer.clear(true);
-		this.Renderer.render(Scene, Camera);
+		Renderer.setClearColorHex(0x000000, 1.0);
+		Renderer.clear(true);
+		Renderer.render(Scene, Camera);
 		if(this.RoboHand)
-		this.RoboHand.Wave(Date.now());
+			this.RoboHand.Wave(Date.now());
 		
-		///Update spotlight position
-		/*  ///WORK ON THIS LATER
-		spotLight.position = camobject.position;
+		//Update spotlight position
+		this.SpotLight.position = this.camobject.position;
 		var dir = new THREE.Vector3(0,0,-1);
-		var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
-		spotLight.target.position = dirW;
+		var dirW = dir.applyMatrix4(this.camobject.matrixRotationWorld);
+		this.SpotLight.target.position = dirW;
 		
-		var SpotTarget = spotLight.target.position.clone();
-		var Wstarget = Camera.localToWorld(SpotTarget);
-		SpotLightDirection = Wstarget.sub(spotLight.position);
-		SpotLightDirection.multiplyScalar(-1);
-		GSuniforms.u_SpotLightDirection.value = SpotLightDirection.clone(); //I was figuring out for 3 hrs that you have to do this
-		var NewLightLoc = new THREE.Vector3(spotLight.position.x, spotLight.position.y, spotLight.position.z); 
-		GSuniforms.u_SpotLightPosition.value = NewLightLoc.clone();
+		var SpotTarget = this.SpotLight.target.position.clone();
+		var Wstarget = this.Camera.localToWorld(SpotTarget);
+		this.SpotLightDirection = Wstarget.sub(this.SpotLight.position);
+		this.SpotLightDirection.multiplyScalar(-1);
+		this.ShaderUniforms[0].u_SpotLightDirection.value = this.SpotLightDirection.clone();
+		var NewLightLoc = new THREE.Vector3(this.SpotLight.position.x, this.SpotLight.position.y, this.SpotLight.position.z); 
+		this.ShaderUniforms[0].u_SpotLightPosition.value = NewLightLoc.clone();
 		
 		
-		///Rotate pivots	
-		zPivot.rotation.z = camobject.rotation.y;
-		zPivot.rotation.x = 1.57 -Camera.rotation.x;
+		//Rotate pivots
+		if(this.HelpPivot)
+		{
+			this.HelpPivot.rotation.z = this.camobject.rotation.y;
+			this.HelpPivot.rotation.x = 1.57 -this.Camera.rotation.x;
+		}
 		
-		if( keysPressed["W".charCodeAt(0)] == true ){
+		
+		if( this.keysPressed["W".charCodeAt(0)] == true ){
 			var dir = new THREE.Vector3(0,0,-1);
-			var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
-			camobject.translate(0.1, dirW);
+			var dirW = dir.applyMatrix4(this.camobject.matrixRotationWorld);
+			this.camobject.translate(0.1, dirW);
 			Moving = true;
 			
 		}
-		if( keysPressed["S".charCodeAt(0)] == true ){
+		if( this.keysPressed["S".charCodeAt(0)] == true ){
 			var dir = new THREE.Vector3(0,0,-1);
-			var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
+			var dirW = dir.applyMatrix4(this.camobject.matrixRotationWorld);
 			Moving = true;
-			camobject.translate(-0.1, dirW);
-			
-			//alert(SpotLightDirection.x + " " + SpotLightDirection.y + " " + SpotLightDirection.z); 
+			this.camobject.translate(-0.1, dirW);
 		}
-		if( keysPressed["A".charCodeAt(0)] == true ){
+		if( this.keysPressed["A".charCodeAt(0)] == true ){
 			var dir = new THREE.Vector3(-1,0,0);
-			var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
+			var dirW = dir.applyMatrix4(this.camobject.matrixRotationWorld);
 			Moving = true;
-			camobject.translate(0.1, dirW);
+			this.camobject.translate(0.1, dirW);
 		}
-		if( keysPressed["D".charCodeAt(0)] == true ){
+		if( this.keysPressed["D".charCodeAt(0)] == true ){
 			var dir = new THREE.Vector3(1,0,0);
-			var dirW = dir.applyMatrix4(camobject.matrixRotationWorld);
+			var dirW = dir.applyMatrix4(this.camobject.matrixRotationWorld);
 			Moving = true;
-			camobject.translate(0.1, dirW);
-		}
-		
+			this.camobject.translate(0.1, dirW);
+		}  
 		if(Moving){
-			Movement += 0.14;
-			camobject.position.y = Math.sin(Movement)*0.1 + 1;
+			this.Movement += 0.14;
+			this.camobject.position.y = Math.sin(this.Movement)*0.1 + 1;
 		}
-		*/
 		requestAnimationFrame(this.Animate); //called by browser-supported timer loop. 
-	}
+	};
 	
 	//Adding Skybox to the scene
-	this.AddSkyBox = function( Materials, Size ) { /* NOT FINISHED */
-		/* var skyboxMaterials = [];  ///TO BE MADE IN MAIN CODE
-		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_west.png") }));
-		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_east.png") }));
-		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_up.png") }));
-		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_down.png") }));
-		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_north.png") }));
-		skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_south.png") }));
-		*/
+	this.AddSkyBox = function( Materials, Size ) { 
+		
 		
 		$.each(Materials, function(i, d){ 	
 			d.side = THREE.BackSide;
@@ -114,7 +109,7 @@ function Map(camera, scene, renderer)
 		);
 		this.Skybox.position = this.camobject.position;
 		this.Scene.add(this.Skybox);
-	}
+	};
 	
 	//Adding pivots for easier navigation
 	this.AddPivotHelper = function(screenoffset_x, screenoffset_y, screenoffset_z){
@@ -138,7 +133,7 @@ function Map(camera, scene, renderer)
 		xPivot.rotation.z = -1.57;
 		xPivot.position.z = 0.0;
 		xPivot.setColor(0xff0000);
-	}
+	};
 	
 	//Adding ground
 	this.AddGround = function(texture){
@@ -149,7 +144,7 @@ function Map(camera, scene, renderer)
 		transparent: true}));
 	
 		this.Scene.add(this.Ground);
-	}
+	};
 	
 	//Adding a directional light
 	this.AddDirectionalLight = function(color, intensity, position){
@@ -157,14 +152,14 @@ function Map(camera, scene, renderer)
 		this.DirLight = new THREE.DirectionalLight( color, intensity);
 		this.DirLight.position = position;
 		this.Scene.add(this.DirLight);
-	}
+	};
 	
 	//Adding ambient light
 	this.AddAmbientLight = function(color){
 		
 		this.AmbientLight = new THREE.AmbientLight(color);
 		this.Scene.add(this.AmbientLight);
-	}
+	};
 	
 	//Adding spotlight 
 	this.AddSpotLight = function(color, intensity, angle, exponent, MaxDistance, cameraoffset){
@@ -176,38 +171,38 @@ function Map(camera, scene, renderer)
 		spotLightObj = new THREE.Object3D();
 		this.Camera.add(spotLightObj);
 		
-		this.SpotLight.position.Add(cameraOffset);
+		this.SpotLight.position.add(cameraoffset);
 		this.SpotLight.target = spotLightObj;
 		this.Scene.add(this.SpotLight);
-	}
+	};
 	
 	//Fog functionality
 	this.AddExpFog = function(color, exponent){
 		this.Scene.fog = new THREE.FogExp2(color, exponent);
-	}
+	};
 	
-	this.GetLightShaderUniforms = function(texture){	/* NOT FINISHED */  /////No idea if it would even work
+	this.GetLightShaderUniforms = function(texture){  /////No idea if it would even work
 		uniforms = { //Defining a new property for our map class
 			texture: { type: "t", value: THREE.ImageUtils.loadTexture(texture) },
 			
-			u_DirLightColor: { type: "v3", value: new THREE.Vector3(directionalLight.color.r, directionalLight.color.g, directionalLight.color.b) },
-			u_AmbientLightColor: { type: "v3", value: new THREE.Vector3(ambientLight.color.r, ambientLight.color.g, ambientLight.color.b) },
-			u_DirLightIntensity: { type: "f", value: directionalLight.intensity},
-			u_DirLightDirection:{ type: "v3", value: Lightdir_XZYtoXYZ(directionalLight.position) },
+			u_DirLightColor: { type: "v3", value: new THREE.Vector3(this.DirLight.color.r, this.DirLight.color.g, this.DirLight.color.b) },
+			u_AmbientLightColor: { type: "v3", value: new THREE.Vector3(this.AmbientLight.color.r, this.AmbientLight.color.g, this.AmbientLight.color.b) },
+			u_DirLightIntensity: { type: "f", value: this.DirLight.intensity},
+			u_DirLightDirection:{ type: "v3", value: Lightdir_XZYtoXYZ(this.DirLight.position) }, //Might not work
 			
-			u_SpotLightDirection: {type: "v3", value: SpotLightDirection },
-			u_SpotLightPosition: { type: "v3", value: new THREE.Vector3(spotLight.position.x, spotLight.position.y, spotLight.position.z) },
-			u_SpotLightColor: { type: "v3", value: new THREE.Vector3(spotLight.color.r, spotLight.color.g, spotLight.color.b) },
-			u_SpotLightExp: { type: "f", value: spotLight.exponent},
-			u_SpotLightAngle: { type: "f", value: spotLight.angle},
-			u_SpotLightDistance: { type: "f", value: sLdistance }
+			u_SpotLightDirection: {type: "v3", value: this.SpotLightDirection },
+			u_SpotLightPosition: { type: "v3", value: new THREE.Vector3(this.SpotLight.position.x, this.SpotLight.position.y, this.SpotLight.position.z) },
+			u_SpotLightColor: { type: "v3", value: new THREE.Vector3(this.SpotLight.color.r, this.SpotLight.color.g, this.SpotLight.color.b) },
+			u_SpotLightExp: { type: "f", value: this.SpotLight.exponent},
+			u_SpotLightAngle: { type: "f", value: this.SpotLight.angle},
+			u_SpotLightDistance: { type: "f", value: this.SpotLight.distance }
 		};
 		return uniforms;
-	}
+	};
 	
 	this.MeshHandler = function(geometry, MaterialIndex){
 		this.Meshes.push( new THREE.Mesh(geometry, this.ShaderMaterials[MaterialIndex]));
-	}
+	};
 	
 	
 }

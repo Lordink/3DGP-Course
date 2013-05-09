@@ -37,48 +37,48 @@ $(function()
 	Renderer = new THREE.WebGLRenderer({antialias:true});
 	Camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR );
 	Scene = new THREE.Scene();
-	camobject = new THREE.Object3D();
-	camobject.add(Camera); //making cam a child of camobject
-	camobject.position.z = 5;
-	camobject.position.y = 1.0;
-	Scene.add(camobject);
 	Renderer.setSize(WIDTH, HEIGHT); //Start renderer
 	
 //Attach the renderer to DOM element
 	$container.append(Renderer.domElement);
 	
-	///Skybox addition
+	var RuinsMap = new Map(Camera, Scene, Renderer);
 	
-	AddSkyBox();
+	RuinsMap.AddPivotHelper(0.23, -0.12, -0.35);
+	RuinsMap.AddDirectionalLight( 0x88aaff, 0.68,  new THREE.Vector3(1, 1, -1) ); //Goes to Ruinsmap.DirLight
+	RuinsMap.AddAmbientLight(0x181a1f);
+	RuinsMap.AddSpotLight(0xffffaa, 2.0, 0.9, 188.1, 15.0, new THREE.Vector3(0.0, 0.0, 1.0))
+	RuinsMap.AddExpFog(0x172747, 0.05);
+	RoboHand = new Hand(RuinsMap.Scene, 0,0,2);
 	
-	function AddSkyBox()
-	{
-		///
-	}
 	
+	//Skybox addition
+	var skyboxMaterials = [];  
+	skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_west.png") }));
+	skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_east.png") }));
+	skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_up.png") }));
+	skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_down.png") }));
+	skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_north.png") }));
+	skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_south.png") }));
+	RuinsMap.AddSkyBox(skyboxMaterials, new THREE.Vector3(40,40,40));
+	
+	
+	//Adding ground
 	t_Floor = THREE.ImageUtils.loadTexture("../SquaredConcrete1.jpg");
 	t_Floor.anisotropy = RuinsMap.Renderer.getMaxAnisotropy();
 	t_Floor.wrapS = THREE.RepeatWrapping;
 	t_Floor.wrapT = THREE.RepeatWrapping;
 	t_Floor.repeat.set(256,256);
 	RuinsMap.AddGround(t_Floor);
-	
-	RuinsMap.AddDirectionalLight( 0x88aaff, 0.68,  new THREE.Vector3(1, 1, -1) ); //Goes to Ruinsmap.DirLight
-	RuinsMap.AddAmbientLight(0x181a1f);
-	RuinsMap.AddSpotLight(0xffffaa, 2.0, 0.9, 188.1, 15.0, new THREE.Vector3(0.0, 0.0, 1.0))
-	RuinsMap.AddExpFog(0x172747, 0.05);
-	
+		
+	//Adding custom shaded ruins 
 	RuinsMap.ShaderUniforms[0] = RuinsMap.GetLightShaderUniforms("../rock.jpg");
-
-	//var vertShader = document.getElementById('shader-vs').textContent;
-	//var fragShader = document.getElementById('shader-fs').textContent;
-	
 	var GroundShader = new THREE.ShaderMaterial({
 		uniforms: RuinsMap.ShaderUniforms[0],
-		vertexShader: $('shader-vs').textContent,
-		fragmentShader: $('shader-fs').textContent
+		vertexShader: $('shader-vs').text(),
+		fragmentShader: $('shader-fs').text()
 	});
-	RuinsMap.Materials[0] = GroundShader; 
+	RuinsMap.ShaderMaterials[0] = GroundShader; 
 	
 	function checkIsAllLoaded(){
 		if( RuinsMap.Meshes.length == 5 )
@@ -107,9 +107,8 @@ $(function()
 	RuinsMap.MeshLoader.load("../meshes/ruins34.js", handler);
 	RuinsMap.MeshLoader.load("../meshes/ruins35.js", handler);
 	
-///Now adding the hand
-	RoboHand = new Hand(RuinsMap.Scene, 0,0,2);
 	
+
 	RuinsMap.Animate();
 	
 ///Handle mouse input
@@ -129,10 +128,10 @@ $(function()
 		{
 			var rot = (ev.pageY - mouse.prevY) * MOUSESENS;
 			var rotY = (ev.pageX - mouse.prevX) * MOUSESENS;
-			camobject.rotation.y -= rotY;
+			RuinsMap.camobject.rotation.y -= rotY;
 		//Make sure we dont "overlook" down or up:
-			if( ( (Camera.rotation.x <= 1.5) || (rot > 0.0) ) && ( (Camera.rotation.x >= -1.5) || (rot < 0.0)))
-				Camera.rotation.x -= rot;
+			if( ( (RuinsMap.Camera.rotation.x <= 1.5) || (rot > 0.0) ) && ( (RuinsMap.Camera.rotation.x >= -1.5) || (rot < 0.0)))
+				RuinsMap.Camera.rotation.x -= rot;
 			mouse.prevY = ev.pageY;
 			mouse.prevX = ev.pageX;
 		}
