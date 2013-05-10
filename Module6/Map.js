@@ -32,7 +32,7 @@ function Map(camera, scene, renderer, callback)
 		this.Scene.add(this.camobject);
 		this.Constructed = true;
 		console.log('Constructor: Finished;');
-		callback(); //The main code will continue exeuction only after this constructor finishes his stuff
+		callback(); //The main code will continue execution only after this constructor finishes his stuff
 	});
 	/// ----------------------------------------------------------------///
 	
