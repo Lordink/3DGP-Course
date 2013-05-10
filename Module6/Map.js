@@ -1,6 +1,6 @@
 //Map class for utilizing with Three.js
 
-function Map(camera, scene, renderer, callback)
+function Map(camera, scene, renderer)
 {
 	/// Constructor:--------------------------------------------------- ///
 	console.log('Started Map constructor');
@@ -31,7 +31,7 @@ function Map(camera, scene, renderer, callback)
 	
 	
 	console.log('Constructor: Finished');
-	callback(); //The main code will continue execution only after this constructor finishes his stuff
+	//callback(); //The main code will continue execution only after this constructor finishes his stuff
 	/// ----------------------------------------------------------------///
 	
 	this.getMov = function(){ return this.Movement; };
@@ -135,14 +135,14 @@ function Map(camera, scene, renderer, callback)
 		
 		this.DirLight = new THREE.DirectionalLight( color, intensity);
 		this.DirLight.position = position;
-		Scene.add(this.DirLight);
+		this.Scene.add(this.DirLight);
 	};
 	
 	//Adding ambient light
 	this.AddAmbientLight = function(color){
 		
 		this.AmbientLight = new THREE.AmbientLight(color);
-		Scene.add(this.AmbientLight);
+		this.Scene.add(this.AmbientLight);
 	};
 	
 	//Adding spotlight 
@@ -153,16 +153,16 @@ function Map(camera, scene, renderer, callback)
 		this.SpotLight.angle = angle; //cone angle 			
 		
 		spotLightObj = new THREE.Object3D();
-		Camera.add(spotLightObj);
+		this.Camera.add(spotLightObj);
 		
 		this.SpotLight.position.add(cameraoffset);
 		this.SpotLight.target = spotLightObj;
-		Scene.add(this.SpotLight);
+		this.Scene.add(this.SpotLight);
 	};
 	
 	//Fog functionality
 	this.AddExpFog = function(color, exponent){
-		Scene.fog = new THREE.FogExp2(color, exponent);
+		this.Scene.fog = new THREE.FogExp2(color, exponent);
 	};
 	
 	this.GetLightShaderUniforms = function(texture){  /////No idea if it would even work
