@@ -27,7 +27,6 @@ $(function()
 	var lCamera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR );
 	var lScene = new THREE.Scene();
 	lRenderer.setSize(WIDTH, HEIGHT); //Start renderer
-	console.log('Camera shit ' + lCamera.position.x);
 	
 //Attach the renderer to DOM element
 	$container.append(lRenderer.domElement);
@@ -50,7 +49,7 @@ $(function()
 	skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_down.png") }));
 	skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_north.png") }));
 	skyboxMaterials.push( new THREE.MeshBasicMaterial({ map:THREE.ImageUtils.loadTexture("../nightsky/nightsky_south.png") }));
-	RuinsMap.AddSkyBox(skyboxMaterials, new THREE.Vector3(40,40,40));
+	RuinsMap.AddSkyBox(skyboxMaterials, new THREE.Vector3(1,1,1));
 	
 	
 	//Adding ground
@@ -61,12 +60,14 @@ $(function()
 	t_Floor.repeat.set(256,256);
 	RuinsMap.AddGround(t_Floor);
 		
+	
 	//Adding custom shaded ruins 
 	RuinsMap.ShaderUniforms[0] = RuinsMap.GetLightShaderUniforms("../rock.jpg");
 	var GroundShader = new THREE.ShaderMaterial({
 		uniforms: RuinsMap.ShaderUniforms[0],
-		vertexShader: $('shader-vs').text(),
-		fragmentShader: $('shader-fs').text()
+		vertexShader: $('#shader-vs')[0].textContent,
+		fragmentShader: $('#shader-fs')[0].textContent,
+		transparent: true
 	});
 	RuinsMap.ShaderMaterials[0] = GroundShader; 
 	
@@ -106,8 +107,8 @@ $(function()
 		RuinsMap.Renderer.setClearColorHex(0x000000, 1.0);
 		RuinsMap.Renderer.clear(true);
 		RuinsMap.Renderer.render(RuinsMap.Scene, RuinsMap.Camera);
-		if(RuinsMap.RoboHand)
-		RuinsMap.RoboHand.Wave(Date.now());
+		if(RoboHand)
+			RoboHand.Wave(Date.now());
 		
 		//Update spotlight position
 		RuinsMap.SpotLight.position = RuinsMap.camobject.position;
