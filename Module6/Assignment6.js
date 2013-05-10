@@ -1,8 +1,5 @@
 var WIDTH = window.innerWidth -15,
 	HEIGHT = window.innerWidth * 9/16;
-///var Camera;
-///var Scene;
-///var Renderer;
 //Mouse struct:
 var mouse = { 
 	down: false,
@@ -35,6 +32,7 @@ $(function()
 		
 	//Attach the renderer to DOM element
 		$container.append(lRenderer.domElement);
+		
 		
 		var RuinsMap = new Map(lCamera, lScene, lRenderer, 
 		function() //Called when map constructor is finished

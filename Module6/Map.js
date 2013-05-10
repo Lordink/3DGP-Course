@@ -28,9 +28,10 @@ function Map(camera, scene, renderer, callback)
 	this.camobject.position.y = 1.0;
 	
 	this.Scene.add(this.camobject);
+	
+	
 	console.log('Constructor: Finished');
 	callback(); //The main code will continue execution only after this constructor finishes his stuff
-
 	/// ----------------------------------------------------------------///
 	
 	this.getMov = function(){ return this.Movement; };
@@ -186,7 +187,8 @@ function Map(camera, scene, renderer, callback)
 	this.MeshHandler = function(geometry, MaterialIndex){
 		this.Meshes.push( new THREE.Mesh(geometry, this.ShaderMaterials[MaterialIndex]));
 	};
-		
+	
+	
 }
 
 	//Adding pivots for easier navigation
