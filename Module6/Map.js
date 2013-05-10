@@ -1,6 +1,6 @@
 //Map class for utilizing with Three.js
 
-function Map(camera, scene, renderer, callback)
+function Map(camera, scene, renderer, /*callback*/)
 {
 	/// Constructor:--------------------------------------------------- ///
 	console.log('Started constructor: Loading Three.js');
@@ -32,7 +32,7 @@ function Map(camera, scene, renderer, callback)
 		this.Scene.add(this.camobject);
 		this.Constructed = true;
 		console.log('Constructor: Finished;');
-		callback(); //The main code will continue execution only after this constructor finishes his stuff
+		//callback(); //The main code will continue execution only after this constructor finishes his stuff
 	});
 	/// ----------------------------------------------------------------///
 	
