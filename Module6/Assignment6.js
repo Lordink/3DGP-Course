@@ -100,7 +100,7 @@ $(function()
 		RuinsMap.MeshLoader.load("../meshes/ruins35.js", handler);
 		
 			
-		//RuinsMap.Animate();
+		RuinsMap.Animate();
 
 	///Handle mouse input
 		document.onmousedown = function(ev)

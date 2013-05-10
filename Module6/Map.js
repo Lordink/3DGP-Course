@@ -39,9 +39,9 @@ function Map(camera, scene, renderer)
 	//Continious update of positions and rotation
 	this.Animate = function() {
 		var Moving = false;
-		Renderer.setClearColorHex(0x000000, 1.0);
-		Renderer.clear(true);
-		Renderer.render(this.Scene, this.Camera);
+		this.Renderer.setClearColorHex(0x000000, 1.0);
+		this.Renderer.clear(true);
+		this.Renderer.render(this.Scene, this.Camera);
 		if(this.RoboHand)
 			this.RoboHand.Wave(Date.now());
 		
