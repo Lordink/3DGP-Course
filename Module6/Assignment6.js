@@ -28,7 +28,7 @@ $(function()
 //Create cam, renderer and scene
 	$.getScript("../three.js", function(){ 
 		var lRenderer = new THREE.WebGLRenderer({antialias:true});
-		lCamera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR );
+		var lCamera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR );
 		var lScene = new THREE.Scene();
 		lRenderer.setSize(WIDTH, HEIGHT); //Start renderer
 		console.log('Camera shit ' + lCamera.position.x);
@@ -36,9 +36,9 @@ $(function()
 	//Attach the renderer to DOM element
 		$container.append(lRenderer.domElement);
 		
-		var RuinsMap = new Map(lCamera, lScene, lRenderer);
-		/*function() //Called when map constructor is finished
-		{*/
+		var RuinsMap = new Map(lCamera, lScene, lRenderer, 
+		function() //Called when map constructor is finished
+		{
 			console.log(RuinsMap.getMov());
 			RuinsMap.AddPivotHelper(0.23, -0.12, -0.35);
 			RuinsMap.AddDirectionalLight( 0x88aaff, 0.68,  new THREE.Vector3(1, 1, -1) ); //Goes to Ruinsmap.DirLight
@@ -138,7 +138,7 @@ $(function()
 			document.onkeyup = function(event){
 				keysPressed[event.keyCode] = false;
 			}
-		/*});*/
+		});
 	});
 });
 

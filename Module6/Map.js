@@ -1,39 +1,36 @@
 //Map class for utilizing with Three.js
 
-function Map(camera, scene, renderer, /*callback*/)
+function Map(camera, scene, renderer, callback)
 {
 	/// Constructor:--------------------------------------------------- ///
-	console.log('Started constructor: Loading Three.js');
-	$.getScript("../three.js", function(){ 
-		console.log('Constructor: Finished loading Three.js');
-		this.Camera = camera;
-		this.Scene = scene;
-		this.Renderer = renderer;
-		
-		this.SkyBox = null;
-		this.HelpPivot = null;
-		this.Ground = null;
-		this.DirLight = null;
-		this.AmbientLight = null;
-		this.SpotLight = null;
-		this.SpotLightDirection = null;
-		this.ShaderMaterials = [];
-		this.ShaderUniforms = [];
-		this.Meshes = [];
-		this.MeshLoader = new THREE.JSONLoader();
-		this.keysPressed = [];
-		this.Movement = 0.0;
-		
-		this.camobject = new THREE.Object3D();
-		this.camobject.add(this.Camera); //making cam a child of camobject
-		this.camobject.position.z = 5;
-		this.camobject.position.y = 1.0;
-		
-		this.Scene.add(this.camobject);
-		this.Constructed = true;
-		console.log('Constructor: Finished;');
-		//callback(); //The main code will continue execution only after this constructor finishes his stuff
-	});
+	console.log('Started Map constructor');
+	this.Camera = camera;
+	this.Scene = scene;
+	this.Renderer = renderer;
+	
+	this.SkyBox = null;
+	this.HelpPivot = null;
+	this.Ground = null;
+	this.DirLight = null;
+	this.AmbientLight = null;
+	this.SpotLight = null;
+	this.SpotLightDirection = null;
+	this.ShaderMaterials = [];
+	this.ShaderUniforms = [];
+	this.Meshes = [];
+	this.MeshLoader = new THREE.JSONLoader();
+	this.keysPressed = [];
+	this.Movement = 0.0;
+	
+	this.camobject = new THREE.Object3D();
+	this.camobject.add(this.Camera); //making cam a child of camobject
+	this.camobject.position.z = 5;
+	this.camobject.position.y = 1.0;
+	
+	this.Scene.add(this.camobject);
+	console.log('Constructor: Finished');
+	callback(); //The main code will continue execution only after this constructor finishes his stuff
+
 	/// ----------------------------------------------------------------///
 	
 	this.getMov = function(){ return this.Movement; };
