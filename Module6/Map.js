@@ -33,73 +33,9 @@ function Map(camera, scene, renderer)
 	console.log('Constructor: Finished');
 	//callback(); //The main code will continue execution only after this constructor finishes his stuff
 	/// ----------------------------------------------------------------///
+
 	
-	this.getMov = function(){ return this.Movement; };
-	
-	//Continious update of positions and rotation
-	this.Animate = function() {
-		var Moving = false;
-		this.Renderer.setClearColorHex(0x000000, 1.0);
-		this.Renderer.clear(true);
-		this.Renderer.render(this.Scene, this.Camera);
-		if(this.RoboHand)
-			this.RoboHand.Wave(Date.now());
-		
-		//Update spotlight position
-		this.SpotLight.position = this.camobject.position;
-		var dir = new THREE.Vector3(0,0,-1);
-		var dirW = dir.applyMatrix4(this.camobject.matrixRotationWorld);
-		this.SpotLight.target.position = dirW;
-		
-		var SpotTarget = this.SpotLight.target.position.clone();
-		var Wstarget = this.Camera.localToWorld(SpotTarget);
-		this.SpotLightDirection = Wstarget.sub(this.SpotLight.position);
-		this.SpotLightDirection.multiplyScalar(-1);
-		this.ShaderUniforms[0].u_SpotLightDirection.value = this.SpotLightDirection.clone();
-		var NewLightLoc = new THREE.Vector3(this.SpotLight.position.x, this.SpotLight.position.y, this.SpotLight.position.z); 
-		this.ShaderUniforms[0].u_SpotLightPosition.value = NewLightLoc.clone();
-		
-		
-		//Rotate pivots
-		if(this.HelpPivot)
-		{
-			this.HelpPivot.rotation.z = this.camobject.rotation.y;
-			this.HelpPivot.rotation.x = 1.57 -this.Camera.rotation.x;
-		}
-		
-		
-		if( this.keysPressed["W".charCodeAt(0)] == true ){
-			var dir = new THREE.Vector3(0,0,-1);
-			var dirW = dir.applyMatrix4(this.camobject.matrixRotationWorld);
-			this.camobject.translate(0.1, dirW);
-			Moving = true;
-			
-		}
-		if( this.keysPressed["S".charCodeAt(0)] == true ){
-			var dir = new THREE.Vector3(0,0,-1);
-			var dirW = dir.applyMatrix4(this.camobject.matrixRotationWorld);
-			Moving = true;
-			this.camobject.translate(-0.1, dirW);
-		}
-		if( this.keysPressed["A".charCodeAt(0)] == true ){
-			var dir = new THREE.Vector3(-1,0,0);
-			var dirW = dir.applyMatrix4(this.camobject.matrixRotationWorld);
-			Moving = true;
-			this.camobject.translate(0.1, dirW);
-		}
-		if( this.keysPressed["D".charCodeAt(0)] == true ){
-			var dir = new THREE.Vector3(1,0,0);
-			var dirW = dir.applyMatrix4(this.camobject.matrixRotationWorld);
-			Moving = true;
-			this.camobject.translate(0.1, dirW);
-		}  
-		if(Moving){
-			this.Movement += 0.14;
-			this.camobject.position.y = Math.sin(this.Movement)*0.1 + 1;
-		}
-		requestAnimationFrame(this.Animate); //called by browser-supported timer loop. 
-	};
-	
+
 	//Adding Skybox to the scene
 	this.AddSkyBox = function( Materials, Size ) { 
 		
