@@ -1,39 +1,49 @@
 //Map class for utilizing with Three.js
 
-function Map(camera, scene, renderer)
+function Map(camera, scene, renderer, callback)
 {
 	/// Constructor:--------------------------------------------------- ///
-	this.Camera = camera;
-	this.Scene = scene;
-	this.Renderer = renderer;
-	
-	this.SkyBox = null;
-	this.HelpPivot = null;
-	this.Ground = null;
-	this.DirLight = null;
-	this.AmbientLight = null;
-	this.SpotLight = null;
-	this.SpotLightDirection = null;
-	this.ShaderMaterials = [];
-	this.ShaderUniforms = [];
-	this.Meshes = [];
-	this.MeshLoader = new THREE.JSONLoader();
-	this.keysPressed = [];
-	this.Movement = 0.0;
-	
-	this.camobject = new THREE.Object3D();
-	this.camobject.add(this.Camera); //making cam a child of camobject
-	this.camobject.position.z = 5;
-	this.camobject.position.y = 1.0;
-	this.Scene.add(this.camobject);
+	console.log('Started constructor: Loading Three.js');
+	$.getScript("../three.js", function(){ 
+		console.log('Constructor: Finished loading Three.js');
+		this.Camera = camera;
+		this.Scene = scene;
+		this.Renderer = renderer;
+		
+		this.SkyBox = null;
+		this.HelpPivot = null;
+		this.Ground = null;
+		this.DirLight = null;
+		this.AmbientLight = null;
+		this.SpotLight = null;
+		this.SpotLightDirection = null;
+		this.ShaderMaterials = [];
+		this.ShaderUniforms = [];
+		this.Meshes = [];
+		this.MeshLoader = new THREE.JSONLoader();
+		this.keysPressed = [];
+		this.Movement = 0.0;
+		
+		this.camobject = new THREE.Object3D();
+		this.camobject.add(this.Camera); //making cam a child of camobject
+		this.camobject.position.z = 5;
+		this.camobject.position.y = 1.0;
+		
+		this.Scene.add(this.camobject);
+		this.Constructed = true;
+		console.log('Constructor: Finished;');
+		callback(); //The main code will continue exeuction only after this constructor finishes his stuff
+	});
 	/// ----------------------------------------------------------------///
+	
+	this.getMov = function(){ return this.Movement; };
 	
 	//Continious update of positions and rotation
 	this.Animate = function() {
 		var Moving = false;
 		Renderer.setClearColorHex(0x000000, 1.0);
 		Renderer.clear(true);
-		Renderer.render(Scene, Camera);
+		Renderer.render(this.Scene, this.Camera);
 		if(this.RoboHand)
 			this.RoboHand.Wave(Date.now());
 		
@@ -110,31 +120,7 @@ function Map(camera, scene, renderer)
 		this.Skybox.position = this.camobject.position;
 		this.Scene.add(this.Skybox);
 	};
-	
-	//Adding pivots for easier navigation
-	this.AddPivotHelper = function(screenoffset_x, screenoffset_y, screenoffset_z){
-	
-		this.HelpPivot = new THREE.ArrowHelper( new THREE.Vector3( 0, 1, 0 ), new THREE.Vector3( 0, 0, 1 ), 0.03);
-		this.HelpPivot.setColor(0x0000ff);
-		this.Camera.add(this.HelpPivot);
 		
-		this.HelpPivot.position.set(screenoffset_x, screenoffset_y, screenoffset_z);
-		
-		//y and z pivots we will just add to z one.
-		var yPivot = new THREE.ArrowHelper( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, 1 ), 1);
-		this.HelpPivot.add(yPivot);
-		yPivot.rotation.x = -1.57;
-		yPivot.position.z = -0.0;
-		yPivot.setColor(0x00ff00);
-		
-		var xPivot = new THREE.ArrowHelper( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, 1 ), 1);
-		this.HelpPivot.add(xPivot);
-		xPivot.rotation.x = 0;
-		xPivot.rotation.z = -1.57;
-		xPivot.position.z = 0.0;
-		xPivot.setColor(0xff0000);
-	};
-	
 	//Adding ground
 	this.AddGround = function(texture){
 		this.Ground = new THREE.Mesh(
@@ -151,14 +137,14 @@ function Map(camera, scene, renderer)
 		
 		this.DirLight = new THREE.DirectionalLight( color, intensity);
 		this.DirLight.position = position;
-		this.Scene.add(this.DirLight);
+		Scene.add(this.DirLight);
 	};
 	
 	//Adding ambient light
 	this.AddAmbientLight = function(color){
 		
 		this.AmbientLight = new THREE.AmbientLight(color);
-		this.Scene.add(this.AmbientLight);
+		Scene.add(this.AmbientLight);
 	};
 	
 	//Adding spotlight 
@@ -169,16 +155,16 @@ function Map(camera, scene, renderer)
 		this.SpotLight.angle = angle; //cone angle 			
 		
 		spotLightObj = new THREE.Object3D();
-		this.Camera.add(spotLightObj);
+		Camera.add(spotLightObj);
 		
 		this.SpotLight.position.add(cameraoffset);
 		this.SpotLight.target = spotLightObj;
-		this.Scene.add(this.SpotLight);
+		Scene.add(this.SpotLight);
 	};
 	
 	//Fog functionality
 	this.AddExpFog = function(color, exponent){
-		this.Scene.fog = new THREE.FogExp2(color, exponent);
+		Scene.fog = new THREE.FogExp2(color, exponent);
 	};
 	
 	this.GetLightShaderUniforms = function(texture){  /////No idea if it would even work
@@ -203,6 +189,28 @@ function Map(camera, scene, renderer)
 	this.MeshHandler = function(geometry, MaterialIndex){
 		this.Meshes.push( new THREE.Mesh(geometry, this.ShaderMaterials[MaterialIndex]));
 	};
-	
-	
+		
 }
+
+	//Adding pivots for easier navigation
+Map.prototype.AddPivotHelper = function(screenoffset_x, screenoffset_y, screenoffset_z){
+	this.HelpPivot = new THREE.ArrowHelper( new THREE.Vector3( 0, 1, 0 ), new THREE.Vector3( 0, 0, 1 ), 0.03);
+	this.HelpPivot.setColor(0x0000ff);
+	this.Camera.add(this.HelpPivot);
+	
+	this.HelpPivot.position.set(screenoffset_x, screenoffset_y, screenoffset_z);
+	
+	//y and z pivots we will just add to z one.
+	var yPivot = new THREE.ArrowHelper( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, 1 ), 1);
+	this.HelpPivot.add(yPivot);
+	yPivot.rotation.x = -1.57;
+	yPivot.position.z = -0.0;
+	yPivot.setColor(0x00ff00);
+	
+	var xPivot = new THREE.ArrowHelper( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, 1 ), 1);
+	this.HelpPivot.add(xPivot);
+	xPivot.rotation.x = 0;
+	xPivot.rotation.z = -1.57;
+	xPivot.position.z = 0.0;
+	xPivot.setColor(0xff0000);
+};

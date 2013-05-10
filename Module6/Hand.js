@@ -1,4 +1,4 @@
-///Making a class for a hand. Will simplify the code and overall usage
+//A class for a robohand. Will simplify the code and overall usage
 function Hand(Scene, x, y, z)
 {
 	//Starting with shoulder as a parent for alll other arm parts. Adding it as a child to a scene.
@@ -10,7 +10,6 @@ function Hand(Scene, x, y, z)
 	this.Shoulder.rotation.x = 0;
 	this.Shoulder.rotation.y = 0;
 	this.Shoulder.rotation.z = 0;
-	///WRITE HERE ROTATION MANUALY
 	
 	this.UpperArm = new THREE.Mesh(new THREE.CubeGeometry(0.5,0.15,0.15, 1, 1, 1), new THREE.MeshLambertMaterial( {color: 0x00ff00} ));
 	this.UpperArm.position.x = x + 0.4;
