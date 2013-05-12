@@ -22,6 +22,8 @@ function Map(camera, scene, renderer)
 	this.keysPressed = [];
 	this.Movement = 0.0;
 	
+	this.Fog
+	
 	this.camobject = new THREE.Object3D();
 	this.camobject.add(this.Camera); //making cam a child of camobject
 	this.camobject.position.z = 5;
@@ -97,8 +99,8 @@ function Map(camera, scene, renderer)
 	};
 	
 	//Fog functionality
-	this.AddExpFog = function(color, exponent){
-		this.Scene.fog = new THREE.FogExp2(color, exponent);
+	this.AddFog = function(color, near, far){
+		this.Scene.fog = new THREE.Fog(color, near, far);
 	};
 	
 	this.GetLightShaderUniforms = function(texture){  /////No idea if it would even work
@@ -115,7 +117,11 @@ function Map(camera, scene, renderer)
 			u_SpotLightColor: { type: "v3", value: new THREE.Vector3(this.SpotLight.color.r, this.SpotLight.color.g, this.SpotLight.color.b) },
 			u_SpotLightExp: { type: "f", value: this.SpotLight.exponent},
 			u_SpotLightAngle: { type: "f", value: this.SpotLight.angle},
-			u_SpotLightDistance: { type: "f", value: this.SpotLight.distance }
+			u_SpotLightDistance: { type: "f", value: this.SpotLight.distance },
+			
+			fogColor:{ type: "v3", value: new THREE.Vector3(this.Scene.fog.color.r, this.Scene.fog.color.g, this.Scene.fog.color.b) },
+			fogNear:{ type: "f", value: this.Scene.fog.near },
+			fogFar:{ type: "f", value: this.Scene.fog.far },
 		};
 		return uniforms;
 	};
@@ -123,7 +129,6 @@ function Map(camera, scene, renderer)
 	this.MeshHandler = function(geometry, MaterialIndex){
 		this.Meshes.push( new THREE.Mesh(geometry, this.ShaderMaterials[MaterialIndex]));
 	};
-	
 	
 }
 

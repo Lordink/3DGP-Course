@@ -31,7 +31,7 @@
 			uniform vec3 u_DirLightColor;
 			uniform vec3 u_AmbientLightColor;
 			
-			 uniform vec3 u_SpotLightDirection;
+			uniform vec3 u_SpotLightDirection;
 			uniform vec3 u_SpotLightPosition;
 			uniform vec3 u_SpotLightColor;
 			
@@ -40,11 +40,18 @@
 			uniform float u_SpotLightDistance;
 			uniform float u_DirLightIntensity;
 			uniform sampler2D texture;
-			///uniform vec4 u_ambient;
+			
+			//Linear fog support:
+			uniform vec3 fogColor;
+			uniform float fogNear;
+			uniform float fogFar;
 			
 			void main() 
 			{
+				//Directional color computation:
 				vec3 diffuse = u_DirLightIntensity * u_DirLightColor * max( dot( normalize(vNormal), v_DirLightDirection ), 0.0 ) + u_AmbientLightColor;
+				
+				//Spotligh computation:
 				float spotEffect = dot( normalize(u_SpotLightDirection), normalize( u_SpotLightPosition - vWorldPosition ) );
 				if(spotEffect > u_SpotLightAngle) //If pixel is in cone
 				{
@@ -55,7 +62,12 @@
 					diffuse += spotEffect* u_SpotLightColor.xyz * attenuation;
 				}
 				
-				gl_FragColor = vec4(diffuse, 1.0) * texture2D(texture, vUv);
+				//Fog computation:
+				float fogFactor = smoothstep( fogNear, fogFar, gl_FragCoord.z / gl_FragCoord.w );
+				vec4 texColor = vec4(diffuse, 1.0) * texture2D(texture, vUv);
+				
+				//Final color:
+				gl_FragColor = mix( texColor, vec4(fogColor, 1.0), fogFactor );
 			}
 		</script>
 				

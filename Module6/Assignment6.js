@@ -13,8 +13,7 @@ var MOUSESENS = 0.005;
 var SpotLightDirection = new THREE.Vector3(1,0,0);
 var GSuniforms;
 
-$(function()
-{
+$(function(){
 	var VIEW_ANGLE = 50, //vertical FOV. Horizontal is approx 80, I guess
 		ASPECT = WIDTH / HEIGHT,
 		NEAR = 0.1,
@@ -37,7 +36,7 @@ $(function()
 	RuinsMap.AddDirectionalLight( 0x88aaff, 0.68,  new THREE.Vector3(1, 1, -1) ); //Goes to Ruinsmap.DirLight
 	RuinsMap.AddAmbientLight(0x181a1f);
 	RuinsMap.AddSpotLight(0xffffaa, 2.0, 0.9, 188.1, 15.0, new THREE.Vector3(0.0, 0.0, 1.0))
-	RuinsMap.AddExpFog(0x172747, 0.05);
+	RuinsMap.AddFog(0x172747, 10.0, 50.0);
 	RoboHand = new Hand(lScene, 0,0,2);
 	
 	
@@ -101,8 +100,7 @@ $(function()
 	Animate();
 	
 	//Continious update of positions and rotation		
-	function Animate() 
-	{
+	function Animate() {
 		var Moving = false;
 		RuinsMap.Renderer.setClearColorHex(0x000000, 1.0);
 		RuinsMap.Renderer.clear(true);
@@ -168,18 +166,15 @@ $(function()
 	
 
 ///Handle mouse input
-	document.onmousedown = function(ev)
-	{
+	document.onmousedown = function(ev){
 		mouse.down = true;
 		mouse.prevY = ev.pageY;
 		mouse.prevX = ev.pageX;
 	}
-	document.onmouseup = function(ev)
-	{
+	document.onmouseup = function(ev){
 		mouse.down = false;
 	}
-	document.onmousemove = function(ev)
-	{
+	document.onmousemove = function(ev){
 		if( mouse.down )
 		{
 			var rot = (ev.pageY - mouse.prevY) * MOUSESENS;
@@ -201,8 +196,7 @@ $(function()
 	}
 });
 
-function Lightdir_XZYtoXYZ(LightPosition)
-{
+function Lightdir_XZYtoXYZ(LightPosition){
 		//Works for light pointing to 0,0,0
 		var LightDirection = LightPosition;
 		LightDirection = new THREE.Vector3(-1*LightDirection.x, -1*LightDirection.z, LightDirection.y );
