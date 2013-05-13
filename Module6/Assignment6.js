@@ -66,7 +66,7 @@ $(function(){
 		uniforms: RuinsMap.ShaderUniforms[0],
 		vertexShader: $('#shader-vs')[0].textContent,
 		fragmentShader: $('#shader-fs')[0].textContent,
-		transparent: true
+		transparent: false
 	});
 	RuinsMap.ShaderMaterials[0] = GroundShader; 
 	
@@ -96,6 +96,8 @@ $(function(){
 	RuinsMap.MeshLoader.load("../meshes/ruins33.js", handler);
 	RuinsMap.MeshLoader.load("../meshes/ruins34.js", handler);
 	RuinsMap.MeshLoader.load("../meshes/ruins35.js", handler);
+	
+	RuinsMap.Scene.add(createParticleSystem());
 	
 	Animate();
 	
@@ -204,3 +206,28 @@ function Lightdir_XZYtoXYZ(LightPosition){
 		return LightDirection;
 }
 
+function createParticleSystem()
+{
+	var particles = new THREE.Geometry();
+	particles.vertices.push( new THREE.Vector3(-1.0, 1.0, 0.0) );
+	particles.vertices.push( new THREE.Vector3( 0.0, 1.0, 0.0) );
+	particles.vertices.push( new THREE.Vector3( 1.0, 1.0, 0.0) );
+	
+	var material = new THREE.ParticleBasicMaterial( 
+	{
+		color:0xff5f5f,
+		size: 1,
+		transparent: true,
+		map: THREE.ImageUtils.loadTexture( "Media/plasma.png" ),
+		blending: THREE.CustomBlending,
+		blendEquation: THREE.AddEquation,
+		blendSrc: THREE.SrcAlphaFactor,
+		blendDst: THREE.OneFactor,
+		depthWrite: false
+	});
+	
+	var ps = new THREE.ParticleSystem( particles, material );
+	ps.renderDepth = 0;
+	ps.sortParticles = false;
+	return ps;
+}

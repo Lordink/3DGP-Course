@@ -8,7 +8,7 @@ function Map(camera, scene, renderer)
 	this.Scene = scene;
 	this.Renderer = renderer;
 	
-	this.SkyBox = null;
+	this.Skybox = null;
 	this.HelpPivot = null;
 	this.Ground = null;
 	this.DirLight = null;
@@ -54,6 +54,7 @@ function Map(camera, scene, renderer)
 			sbmfm
 		);
 		this.Skybox.position = this.camobject.position;
+		this.Skybox.renderDepth = 0;
 		this.Scene.add(this.Skybox);
 	};
 		
@@ -98,12 +99,13 @@ function Map(camera, scene, renderer)
 		this.Scene.add(this.SpotLight);
 	};
 	
+	
 	//Fog functionality
 	this.AddFog = function(color, near, far){
 		this.Scene.fog = new THREE.Fog(color, near, far);
 	};
 	
-	this.GetLightShaderUniforms = function(texture){  /////No idea if it would even work
+	this.GetLightShaderUniforms = function(texture){  
 		uniforms = { //Defining a new property for our map class
 			texture: { type: "t", value: THREE.ImageUtils.loadTexture(texture) },
 			
@@ -127,7 +129,9 @@ function Map(camera, scene, renderer)
 	};
 	
 	this.MeshHandler = function(geometry, MaterialIndex){
-		this.Meshes.push( new THREE.Mesh(geometry, this.ShaderMaterials[MaterialIndex]));
+		var m = new THREE.Mesh(geometry, this.ShaderMaterials[MaterialIndex]);
+		m.renderDepth = 2000;
+		this.Meshes.push( m );
 	};
 	
 }
@@ -154,3 +158,4 @@ Map.prototype.AddPivotHelper = function(screenoffset_x, screenoffset_y, screenof
 	xPivot.position.z = 0.0;
 	xPivot.setColor(0xff0000);
 };
+
