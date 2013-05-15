@@ -36,8 +36,6 @@ function Map(camera, scene, renderer)
 	//callback(); //The main code will continue execution only after this constructor finishes his stuff
 	/// ----------------------------------------------------------------///
 
-	
-
 	//Adding Skybox to the scene
 	this.AddSkyBox = function( Materials, Size ) { 
 		

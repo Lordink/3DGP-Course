@@ -13,8 +13,6 @@ var CParticleSystem = null;
 var BonFire = null;
 var BonSmoke = null;
 
-var SpotLightDirection = new THREE.Vector3(1,0,0);
-var GSuniforms;
 
 $(function(){
 	var VIEW_ANGLE = 50, //vertical FOV. Horizontal is approx 80, I guess
@@ -33,7 +31,7 @@ $(function(){
 //Attach the renderer to DOM element
 	$container.append(lRenderer.domElement);
 
-	var RuinsMap = new Map(lCamera, lScene, lRenderer);
+	RuinsMap = new Map(lCamera, lScene, lRenderer);
 
 	RuinsMap.AddPivotHelper(0.23, -0.12, -0.35);
 	RuinsMap.AddDirectionalLight( 0x88aaff, 0.68,  new THREE.Vector3(1, 1, -1) ); //Goes to Ruinsmap.DirLight
@@ -72,9 +70,16 @@ $(function(){
 		transparent: false
 	});
 	RuinsMap.ShaderMaterials[0] = GroundShader; 
+	//Skysphere:
+	RuinsMap.ShaderMaterials[1] = new THREE.MeshBasicMaterial( {
+		map: THREE.ImageUtils.loadTexture("Media/clouds.png"),
+		depthWrite: false,
+		transparent: true,
+		blending: THREE.AdditiveBlending
+	});
 	
 	function checkIsAllLoaded(){
-		if( RuinsMap.Meshes.length == 5 )
+		if( RuinsMap.Meshes.length == 6 )
 		{
 			$.each(RuinsMap.Meshes, function(i,mesh)
 			{
@@ -87,10 +92,20 @@ $(function(){
 			RuinsMap.Meshes[2].position.x = -5;
 			RuinsMap.Meshes[4].position.z = 2;
 			RuinsMap.Meshes[3].position.x = 7;
+			
+			RuinsMap.Meshes[5].position.y = 3;
+			RuinsMap.Meshes[5].rotation.x = 0;
+			RuinsMap.Meshes[5].scale.multiplyScalar(10); //learn about scale or smth
+			RuinsMap.Meshes[5].renderDepth = 0;
+			RuinsMap.Meshes[5].position = RuinsMap.camobject.position;
 		}
 	}
 	function handler(geometry, materials){
 		RuinsMap.MeshHandler(geometry, 0)
+		checkIsAllLoaded();
+	}
+	function Skyhandler(geometry, materials){
+		RuinsMap.MeshHandler(geometry, 1)
 		checkIsAllLoaded();
 	}
 	//upon finish of the loading process each model will recall a handler func
@@ -99,6 +114,8 @@ $(function(){
 	RuinsMap.MeshLoader.load("../meshes/ruins33.js", handler);
 	RuinsMap.MeshLoader.load("../meshes/ruins34.js", handler);
 	RuinsMap.MeshLoader.load("../meshes/ruins35.js", handler);
+	//Add SkySphere
+	RuinsMap.MeshLoader.load("Meshes/sky.js", Skyhandler);
 	
 	CParticleSystem = new CustomParticleSystem(
 	{
@@ -200,6 +217,8 @@ $(function(){
 	
 	BonSmoke.start(RuinsMap.Scene);
 	
+	
+	
 	Animate();
 	
 	//Continious update of positions and rotation		
@@ -231,6 +250,11 @@ $(function(){
 		{
 			RuinsMap.HelpPivot.rotation.z = RuinsMap.camobject.rotation.y;
 			RuinsMap.HelpPivot.rotation.x = 1.57 -RuinsMap.Camera.rotation.x;
+		}
+		
+		//Rotating skybox
+		if(RuinsMap.Meshes.length >= 6){ //there is a skysphere
+			RuinsMap.Meshes[5].rotation.y += 0.0004;
 		}
 		
 		if(CParticleSystem != null)
