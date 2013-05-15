@@ -9,6 +9,9 @@ var mouse = {
 var keysPressed = [];
 var MOUSESENS = 0.005;
 
+var CParticleSystem = null;
+var BonFire = null;
+var BonSmoke = null;
 
 var SpotLightDirection = new THREE.Vector3(1,0,0);
 var GSuniforms;
@@ -97,7 +100,105 @@ $(function(){
 	RuinsMap.MeshLoader.load("../meshes/ruins34.js", handler);
 	RuinsMap.MeshLoader.load("../meshes/ruins35.js", handler);
 	
-	RuinsMap.Scene.add(createParticleSystem());
+	CParticleSystem = new CustomParticleSystem(
+	{
+		maxParticles: 10,
+		energyDecrement: 0.3,
+		PPS: 2.0,
+		material: new THREE.ParticleBasicMaterial({
+				color:0xff5f5f,
+				size: 1,
+				transparent: true,
+				map: THREE.ImageUtils.loadTexture( "Media/plasma.png" ),
+				blending: THREE.CustomBlending,
+				blendEquation: THREE.AddEquation,
+				blendSrc: THREE.SrcAlphaFactor,
+				blendDst: THREE.OneFactor,
+				depthWrite: false,
+				fog: true
+			}),
+			onParticleInit: function(particle)
+			{
+				particle.set(0,0,2);
+				particle.velocity = new THREE.Vector3(0,1.0,0);
+				
+				particle.energy = 1.0;	//Particle lifetime  
+			},
+			onParticleUpdate: function( particle, delta )
+			{ 
+				particle.add(particle.velocity.clone().multiplyScalar(delta));
+				particle.energy -= CParticleSystem.options.energyDecrement * delta;
+			}
+	}); 
+	CParticleSystem.start(RuinsMap.Scene);
+	
+	//bonfire code:	
+	BonFire = new CustomParticleSystem(
+	{
+		maxParticles: 100,
+		locationRange: 0.25, //how far from selected point particles can spawn
+		energyDecrement: 1.3,
+		PPS: 30.0, //Particle per second
+		material: new THREE.ParticleBasicMaterial({
+			color: 0xffffff,
+			size: 1,
+			transparent: true,
+			map: THREE.ImageUtils.loadTexture( "Media/fire.png" ),
+			blending: THREE.CustomBlending,
+			blendEquation: THREE.AddEquation,
+			blendSrc: THREE.SrcAlphaFactor,
+			blendDst: THREE.OneFactor, 
+			depthWrite: false,
+			fog: true
+		}),
+		onParticleInit: function(particle)
+		{
+			var locr = BonFire.options.locationRange;
+			var position = new THREE.Vector3( 0, 0, 9.6);
+			particle.set((-0.2 + Math.random()*locr*2- locr), 0.2, 9.6 + (Math.random()*locr*2- locr)); //Let's add some random factor
+			particle.velocity = new THREE.Vector3(0,1.0,0);
+			particle.energy = 1.0;	//Particle lifetime  
+		},
+		onParticleUpdate: function( particle, delta )
+		{ 
+			particle.add(particle.velocity.clone().multiplyScalar(delta));
+			particle.energy -= BonFire.options.energyDecrement * delta;
+		}
+	});
+	
+	BonFire.start(RuinsMap.Scene);
+	
+	BonSmoke = new CustomParticleSystem(
+	{
+		maxParticles: 100,
+		locationRange: 0.35, //how far from selected point particles can spawn
+		energyDecrement: 0.58,
+		PPS: 15.0, //Particle per second
+		material: new THREE.ParticleBasicMaterial({
+			color: 0x3f3f3f,
+			size: 2.5,
+			transparent: true,
+			map: THREE.ImageUtils.loadTexture( "Media/smoke.png" ),
+			blending: THREE.AdditiveBlending,
+			depthWrite: false,
+			fog: true
+		}),
+		onParticleInit: function(particle)
+		{
+			var locr = BonSmoke.options.locationRange;
+			var position = new THREE.Vector3( 0, 0, 9.6);
+			particle.set((-0.2 + Math.random()*locr*2- locr), 0.9, 9.6 + (Math.random()*locr*2- locr)); //Let's add some random factor
+			particle.velocity = new THREE.Vector3(Math.random() - 0.5, Math.random()*3.8, Math.random() - 0.5);
+			particle.energy = 1.0;	//Particle lifetime  
+		},
+		onParticleUpdate: function( particle, delta )
+		{ 
+			particle.add(particle.velocity.clone().multiplyScalar(delta));
+			particle.energy -= BonSmoke.options.energyDecrement * delta;
+		}
+	});
+	
+	BonSmoke.start(RuinsMap.Scene);
 	
 	Animate();
 	
@@ -132,6 +233,12 @@ $(function(){
 			RuinsMap.HelpPivot.rotation.x = 1.57 -RuinsMap.Camera.rotation.x;
 		}
 		
+		if(CParticleSystem != null)
+			CParticleSystem.update();
+		if(BonFire != null)
+			BonFire.update();
+		if(BonSmoke != null)
+			BonSmoke.update();
 		
 		if( keysPressed["W".charCodeAt(0)] == true ){
 			var dir = new THREE.Vector3(0,0,-1);
@@ -162,6 +269,10 @@ $(function(){
 			RuinsMap.Movement += 0.14;
 			RuinsMap.camobject.position.y = Math.sin(RuinsMap.Movement)*0.1 + 1;
 		}
+		
+		if( keysPressed["P".charCodeAt(0)] == true ){
+			CParticleSystem.init(1);
+		}  
 		
 		requestAnimationFrame(Animate); //called by browser-supported timer loop. 
 	}
@@ -206,28 +317,94 @@ function Lightdir_XZYtoXYZ(LightPosition){
 		return LightDirection;
 }
 
-function createParticleSystem()
+var CustomParticleSystem = function( options )
 {
-	var particles = new THREE.Geometry();
-	particles.vertices.push( new THREE.Vector3(-1.0, 1.0, 0.0) );
-	particles.vertices.push( new THREE.Vector3( 0.0, 1.0, 0.0) );
-	particles.vertices.push( new THREE.Vector3( 1.0, 1.0, 0.0) );
-	
-	var material = new THREE.ParticleBasicMaterial( 
+	this.particles = new THREE.Geometry();
+	this.options = options; // some old school oop stuff
+	this.numAlive = 0;
+	this.prevTime = new Date();
+	this.throughput = 0.0;
+	this.PPS = 0.0; //Particle per second
+	if(	options.PPS !== undefined	)
+		this.PPS = options.PPS;
+		
+	//Add amount of particles to geometry
+	for( var i = 0; i < this.options.maxParticles; i++ )
 	{
-		color:0xff5f5f,
-		size: 1,
-		transparent: true,
-		map: THREE.ImageUtils.loadTexture( "Media/plasma.png" ),
-		blending: THREE.CustomBlending,
-		blendEquation: THREE.AddEquation,
-		blendSrc: THREE.SrcAlphaFactor,
-		blendDst: THREE.OneFactor,
-		depthWrite: false
-	});
+		this.particles.vertices.push( new THREE.Vector3() );
+	}
 	
-	var ps = new THREE.ParticleSystem( particles, material );
-	ps.renderDepth = 0;
-	ps.sortParticles = false;
-	return ps;
+	this.ps = new THREE.ParticleSystem( this.particles, this.options.material );
+	this.ps.renderDepth = 0;
+	this.ps.sortParticles = false;
+	this.ps.geometry.__webglParticleCount = 0;
+	
+	this.getNumParticlesAlive = function(){	return this.numAlive;	};
+	this.setNumParticlesAlive = function(coun){	this.numAlive = coun;	};
+	this.getMaxParticleCount = function(){		return this.ps.geometry.vertices.length;	};
+	
+	this.init = function(particleCount){
+		var previouslyAlive = this.getNumParticlesAlive();
+		var  newTotal = particleCount + previouslyAlive; // Adding argumented new particles to the ones which are already alive
+		newTotal = (newTotal > this.getMaxParticleCount() ? 
+			this.getMaxParticleCount() : newTotal );
+		// console.log("particle init: Alive " + newTotal + ", maximum " + this.getMaxParticleCount());
+		this.setNumParticlesAlive(newTotal);
+		for( var p = previouslyAlive; p < newTotal; p++ )
+			this.options.onParticleInit( this.ps.geometry.vertices[p] );
+		this.ps.geometry.verticesNeedUpdate = true;
+	}
+	
+	this.update = function(){
+		
+		var now = new Date();
+		var delta = ( now.getTime() - this.prevTime.getTime() ) / 1000.0;
+		
+		this.ps.geometry.__webglParticleCount = this.getNumParticlesAlive(); //quick hack to make things work
+		
+		//seek and destroy dead ones.
+		this.remDeadParticles();
+		
+		var endPoint = this.getNumParticlesAlive();
+		for( var p = 0; p < endPoint; p++ )
+		{
+			var particle = this.ps.geometry.vertices[p];
+			if( particle !== undefined )
+			{
+				this.options.onParticleUpdate(particle, delta);
+			}
+		}
+		
+		//Add new particles according to thoughtput factor
+		this.throughput += (this.options.PPS * delta);
+		var howManyToCreate = Math.floor(this.throughput);
+		if( howManyToCreate >= 1 ){
+			this.throughput -= howManyToCreate;
+			this.init(howManyToCreate);
+		}
+		
+		this.ps.geometry.verticesNeedUpdate = true; // as positions is changed
+		
+		this.prevTime = now;
+	}
+	
+	this.remDeadParticles = function(){
+		var endPoint = this.getNumParticlesAlive();
+		for(var p = 0; p < endPoint; p++)
+		{
+			var particle = this.ps.geometry.vertices[p];
+			if( particle.energy <= 0.0 ){
+				var tmp = this.ps.geometry.vertices.splice( p, 1 ); //remove from array
+				this.ps.geometry.vertices.push(tmp[0]); //append to the end of array
+				//vertices have shifted, don go so far any more
+				endPoint--;
+				this.setNumParticlesAlive( this.getNumParticlesAlive() - 1 ); 
+			}
+		}
+	}
+	
+	this.start = function(scene){
+		scene.add(this.ps);
+	}
+	
 }
