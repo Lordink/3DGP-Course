@@ -13,6 +13,7 @@ var CParticleSystem = null;
 var BonFire = null;
 var BonSmoke = null;
 
+var fenceshader = null;
 
 $(function(){
 	var VIEW_ANGLE = 50, //vertical FOV. Horizontal is approx 80, I guess
@@ -217,6 +218,52 @@ $(function(){
 	
 	BonSmoke.start(RuinsMap.Scene);
 	
+	//Adding fence
+	
+	RuinsMap.ShaderUniforms[1] = RuinsMap.GetLightShaderUniforms("Media/fence_rusted.png");
+	RuinsMap.ShaderUniforms[1].texture.value.wrapS = THREE.RepeatWrapping;
+	RuinsMap.ShaderUniforms[1].texture.value.wrapT = THREE.RepeatWrapping;
+	RuinsMap.ShaderUniforms[1].alpha = THREE.ImageUtils.loadTexture("Media/fence_alpha.png");
+	RuinsMap.ShaderUniforms[1].alpha.type = "t";
+	RuinsMap.ShaderUniforms[1].alpha.value = THREE.ImageUtils.loadTexture("Media/fence_alpha.png");
+	RuinsMap.ShaderUniforms[1].alpha.value.wrapS = THREE.RepeatWrapping;
+	RuinsMap.ShaderUniforms[1].alpha.value.wrapT = THREE.RepeatWrapping;
+	
+	fenceshader = new THREE.ShaderMaterial({
+		uniforms: RuinsMap.ShaderUniforms[1],
+		vertexShader: $('#shader-vs')[0].textContent,
+		fragmentShader: $('#alpha-fs')[0].textContent,
+		transparent: false,
+		//blending: THREE.NormalBlending
+	});
+	
+	
+	var fence = new THREE.Mesh
+	(
+		new THREE.CubeGeometry(3,3, 0.01),
+		fenceshader
+	);
+	
+	fence.position.x = 6.9;
+	fence.position.z = -0.9;
+	
+	RuinsMap.Scene.add(fence);
+	
+	$.each(fence.geometry.faceVertexUvs[0], function(i, d){
+		d[0] = new THREE.Vector2(0,10);
+		d[2] = new THREE.Vector2(10,0);
+		d[3] = new THREE.Vector2(10,10);
+	}); 
+	
+	var fence2 = fence.clone();
+	fence.position.x = 6.9;
+	fence.position.z = 1.9;
+	RuinsMap.Scene.add(	fence2);
+	var fence3 = fence.clone()
+	fence3.position.x = 8.2;
+	fence3.position.z = 0.5;
+	fence3.rotation.y = Math.PI/2;
+	RuinsMap.Scene.add(fence3);
 	
 	
 	Animate();
@@ -226,10 +273,9 @@ $(function(){
 		var Moving = false;
 		RuinsMap.Renderer.setClearColorHex(0x000000, 1.0);
 		RuinsMap.Renderer.clear(true);
-		RuinsMap.Renderer.render(RuinsMap.Scene, RuinsMap.Camera);
+		
 		if(RoboHand)
 			RoboHand.Wave(Date.now());
-		
 		//Update spotlight position
 		RuinsMap.SpotLight.position = RuinsMap.camobject.position;
 		var dir = new THREE.Vector3(0,0,-1);
@@ -243,7 +289,14 @@ $(function(){
 		RuinsMap.ShaderUniforms[0].u_SpotLightDirection.value = RuinsMap.SpotLightDirection.clone();
 		var NewLightLoc = new THREE.Vector3(RuinsMap.SpotLight.position.x, RuinsMap.SpotLight.position.y, RuinsMap.SpotLight.position.z); 
 		RuinsMap.ShaderUniforms[0].u_SpotLightPosition.value = NewLightLoc.clone();
+		RuinsMap.ShaderUniforms[1].u_SpotLightDirection.value = RuinsMap.SpotLightDirection.clone();
+		var NewLightLoc = new THREE.Vector3(RuinsMap.SpotLight.position.x, RuinsMap.SpotLight.position.y, RuinsMap.SpotLight.position.z); 
+		RuinsMap.ShaderUniforms[1].u_SpotLightPosition.value = NewLightLoc.clone();
 		
+		
+		///
+		RuinsMap.Renderer.render(RuinsMap.Scene, RuinsMap.Camera);
+		///
 		
 		//Rotate pivots
 		if(RuinsMap.HelpPivot)
@@ -297,7 +350,6 @@ $(function(){
 		if( keysPressed["P".charCodeAt(0)] == true ){
 			CParticleSystem.init(1);
 		}  
-		
 		requestAnimationFrame(Animate); //called by browser-supported timer loop. 
 	}
 	
