@@ -326,8 +326,6 @@ $(function(){
 		fragmentShader: $('#alphatrees-fs')[0].textContent,
 		transparent: false,
 		blending: THREE.NoBlending,
-		//depthWrite: true,
-		//depthTest: true
 	});
 	
 	
@@ -385,19 +383,6 @@ $(function(){
 			var NewLightLoc = new THREE.Vector3(RuinsMap.SpotLight.position.x, RuinsMap.SpotLight.position.y, RuinsMap.SpotLight.position.z); 
 			uniform.u_SpotLightPosition.value = NewLightLoc.clone();
 		});
-		/*
-		RuinsMap.ShaderUniforms[0].u_SpotLightDirection.value = RuinsMap.SpotLightDirection.clone();
-		var NewLightLoc = new THREE.Vector3(RuinsMap.SpotLight.position.x, RuinsMap.SpotLight.position.y, RuinsMap.SpotLight.position.z); 
-		RuinsMap.ShaderUniforms[0].u_SpotLightPosition.value = NewLightLoc.clone();
-		RuinsMap.ShaderUniforms[1].u_SpotLightDirection.value = RuinsMap.SpotLightDirection.clone();
-		var NewLightLoc = new THREE.Vector3(RuinsMap.SpotLight.position.x, RuinsMap.SpotLight.position.y, RuinsMap.SpotLight.position.z); 
-		RuinsMap.ShaderUniforms[1].u_SpotLightPosition.value = NewLightLoc.clone();
-		RuinsMap.ShaderUniforms[2].u_SpotLightDirection.value = RuinsMap.SpotLightDirection.clone();
-		var NewLightLoc = new THREE.Vector3(RuinsMap.SpotLight.position.x, RuinsMap.SpotLight.position.y, RuinsMap.SpotLight.position.z); 
-		RuinsMap.ShaderUniforms[2].u_SpotLightPosition.value = NewLightLoc.clone();
-		RuinsMap.ShaderUniforms[3].u_SpotLightDirection.value = RuinsMap.SpotLightDirection.clone();
-		var NewLightLoc = new THREE.Vector3(RuinsMap.SpotLight.position.x, RuinsMap.SpotLight.position.y, RuinsMap.SpotLight.position.z); 
-		RuinsMap.ShaderUniforms[3].u_SpotLightPosition.value = NewLightLoc.clone(); */
 		
 		
 		///

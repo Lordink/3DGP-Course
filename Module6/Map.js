@@ -22,7 +22,7 @@ function Map(camera, scene, renderer)
 	this.keysPressed = [];
 	this.Movement = 0.0;
 	
-	this.Fog
+	this.Fog = null;
 	
 	this.camobject = new THREE.Object3D();
 	this.camobject.add(this.Camera); //making cam a child of camobject
@@ -33,7 +33,6 @@ function Map(camera, scene, renderer)
 	
 	
 	console.log('Constructor: Finished');
-	//callback(); //The main code will continue execution only after this constructor finishes his stuff
 	/// ----------------------------------------------------------------///
 
 	//Adding Skybox to the scene
