@@ -265,6 +265,98 @@ $(function(){
 	fence3.rotation.y = Math.PI/2;
 	RuinsMap.Scene.add(fence3);
 	
+	var pine_trees = [];
+	
+	RuinsMap.ShaderUniforms[2] = RuinsMap.GetLightShaderUniforms("Media/pine.png");
+	RuinsMap.ShaderUniforms[2].alpha = THREE.ImageUtils.loadTexture("Media/pine.png");
+	RuinsMap.ShaderUniforms[2].alpha.type = "t";
+	RuinsMap.ShaderUniforms[2].alpha.value = THREE.ImageUtils.loadTexture("Media/pine.png");
+	
+	
+	var pineshader = new THREE.ShaderMaterial({
+		uniforms: RuinsMap.ShaderUniforms[2],
+		vertexShader: $('#shader-vs')[0].textContent,
+		fragmentShader: $('#alphatrees-fs')[0].textContent,
+		transparent: true,
+		blending: THREE.NormalBlending,
+		depthWrite: false,
+		depthTest: true
+	});
+	
+	
+	pine_trees[0] = new THREE.Mesh
+	(
+		new THREE.CubeGeometry(5,5, 0.01),
+		pineshader
+	);
+	//pine_trees[0].rotation.z = Math.PI;
+	pine_trees[0].position.z = -5;
+	pine_trees[0].position.x = 5;
+	pine_trees[0].position.y = 2.5;
+	pine_trees[1] = pine_trees[0].clone();
+	pine_trees[1].rotation.y = Math.PI/2;
+	
+	for(var i = 2; i < 30; i += 2)
+	{	//making whole alley with those trees
+		pine_trees[i] = pine_trees[i-2].clone();
+		pine_trees[i].position.z -= 5;
+		pine_trees[i+1] = pine_trees[i-1].clone();
+		pine_trees[i+1].position.z -= 5;
+	}
+	
+	$.each(pine_trees, function(i, tree)
+	{
+		RuinsMap.Scene.add(tree);
+		tree.renderDepth = 0;
+	});
+	
+	//Now for the lime trees
+	var lime_trees = [];
+	
+	RuinsMap.ShaderUniforms[3] = RuinsMap.GetLightShaderUniforms("Media/lime.png");
+	RuinsMap.ShaderUniforms[3].alpha = THREE.ImageUtils.loadTexture("Media/lime.png");
+	RuinsMap.ShaderUniforms[3].alpha.type = "t";
+	RuinsMap.ShaderUniforms[3].alpha.value = THREE.ImageUtils.loadTexture("Media/lime.png");
+	
+	
+	
+	var limeshader = new THREE.ShaderMaterial({
+		uniforms: RuinsMap.ShaderUniforms[3],
+		vertexShader: $('#shader-vs')[0].textContent,
+		fragmentShader: $('#alphatrees-fs')[0].textContent,
+		transparent: false,
+		blending: THREE.NoBlending,
+		//depthWrite: true,
+		//depthTest: true
+	});
+	
+	
+	lime_trees[0] = new THREE.Mesh
+	(
+		new THREE.CubeGeometry(5,5, 0.01),
+		limeshader
+	);
+	//lime_trees[0].rotation.z = Math.PI;
+	lime_trees[0].position.z = -5;
+	lime_trees[0].position.x = 15;
+	lime_trees[0].position.y = 2.5;
+	lime_trees[0].rotation.z = Math.PI;
+	lime_trees[1] = lime_trees[0].clone();
+	lime_trees[1].rotation.y = Math.PI/2;
+	
+	for(var i = 2; i < 30; i += 2)
+	{	//making whole alley with those trees
+		lime_trees[i] = lime_trees[i-2].clone();
+		lime_trees[i].position.z -= 5;
+		lime_trees[i+1] = lime_trees[i-1].clone();
+		lime_trees[i+1].position.z -= 5;
+	}
+	
+	$.each(lime_trees, function(i, tree)
+	{
+		RuinsMap.Scene.add(tree);
+		tree.renderDepth = 0;
+	});
 	
 	Animate();
 	
@@ -286,12 +378,26 @@ $(function(){
 		var Wstarget = RuinsMap.Camera.localToWorld(SpotTarget);
 		RuinsMap.SpotLightDirection = Wstarget.sub(RuinsMap.SpotLight.position);
 		RuinsMap.SpotLightDirection.multiplyScalar(-1);
+		
+		$.each(RuinsMap.ShaderUniforms, function(i, uniform)
+		{//For each shader uniform set there is present, we should update spotlight data
+			uniform.u_SpotLightDirection.value = RuinsMap.SpotLightDirection.clone();
+			var NewLightLoc = new THREE.Vector3(RuinsMap.SpotLight.position.x, RuinsMap.SpotLight.position.y, RuinsMap.SpotLight.position.z); 
+			uniform.u_SpotLightPosition.value = NewLightLoc.clone();
+		});
+		/*
 		RuinsMap.ShaderUniforms[0].u_SpotLightDirection.value = RuinsMap.SpotLightDirection.clone();
 		var NewLightLoc = new THREE.Vector3(RuinsMap.SpotLight.position.x, RuinsMap.SpotLight.position.y, RuinsMap.SpotLight.position.z); 
 		RuinsMap.ShaderUniforms[0].u_SpotLightPosition.value = NewLightLoc.clone();
 		RuinsMap.ShaderUniforms[1].u_SpotLightDirection.value = RuinsMap.SpotLightDirection.clone();
 		var NewLightLoc = new THREE.Vector3(RuinsMap.SpotLight.position.x, RuinsMap.SpotLight.position.y, RuinsMap.SpotLight.position.z); 
 		RuinsMap.ShaderUniforms[1].u_SpotLightPosition.value = NewLightLoc.clone();
+		RuinsMap.ShaderUniforms[2].u_SpotLightDirection.value = RuinsMap.SpotLightDirection.clone();
+		var NewLightLoc = new THREE.Vector3(RuinsMap.SpotLight.position.x, RuinsMap.SpotLight.position.y, RuinsMap.SpotLight.position.z); 
+		RuinsMap.ShaderUniforms[2].u_SpotLightPosition.value = NewLightLoc.clone();
+		RuinsMap.ShaderUniforms[3].u_SpotLightDirection.value = RuinsMap.SpotLightDirection.clone();
+		var NewLightLoc = new THREE.Vector3(RuinsMap.SpotLight.position.x, RuinsMap.SpotLight.position.y, RuinsMap.SpotLight.position.z); 
+		RuinsMap.ShaderUniforms[3].u_SpotLightPosition.value = NewLightLoc.clone(); */
 		
 		
 		///

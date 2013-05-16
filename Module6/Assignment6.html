@@ -120,11 +120,64 @@
 				//Fog computation:
 				float fogFactor = smoothstep( fogNear, fogFar, gl_FragCoord.z / gl_FragCoord.w );
 				vec4 texColor = vec4(diffuse, 1.0) * texture2D(texture, vUv);
-				texColor.a = texture2D(alpha, vUv).r;
+				///texColor.a = texture2D(alpha, vUv).r;
+				//Final color:
+				gl_FragColor = mix( texColor, vec4(fogColor, 1.0), fogFactor );
+			}
+		</script>
+		
+		<script id="alphatrees-fs" type="x-shader/x-fragment">
+			varying vec2 vUv; 			//Texcoords
+			varying vec3 vNormal;
+			varying vec3 v_DirLightDirection;
+			varying vec3 vWorldPosition;
+					
+			uniform vec3 u_DirLightColor;
+			uniform vec3 u_AmbientLightColor;
+			
+			uniform vec3 u_SpotLightDirection;
+			uniform vec3 u_SpotLightPosition;
+			uniform vec3 u_SpotLightColor;
+			
+			uniform float u_SpotLightExp;
+			uniform float u_SpotLightAngle;
+			uniform float u_SpotLightDistance;
+			uniform float u_DirLightIntensity;
+			uniform sampler2D texture;
+			
+			//Linear fog support:
+			uniform vec3 fogColor;
+			uniform float fogNear;
+			uniform float fogFar;
+			
+			void main() 
+			{
+				if(texture2D( texture, vUv ).a <= 0.06) //discard if totally transparent
+					discard;
+				
+				
+				//Directional color computation:
+				vec3 diffuse = u_DirLightIntensity * u_DirLightColor * max( dot( normalize(vNormal), v_DirLightDirection ), 0.0 ) + u_AmbientLightColor;
+				
+				//Spotligh computation:
+				float spotEffect = dot( normalize(u_SpotLightDirection), normalize( u_SpotLightPosition - vWorldPosition ) );
+				if(spotEffect > u_SpotLightAngle) //If pixel is in cone
+				{
+					float LitDistance = length(u_SpotLightPosition - vWorldPosition); //distance lit by spotlight
+					float attenuation = (u_SpotLightDistance / LitDistance) / 4.0;
+					attenuation = pow(attenuation, 2.0);
+					spotEffect = max( pow(spotEffect, u_SpotLightExp), 0.0 ); //make sure nothing is < 0 
+					diffuse += spotEffect* u_SpotLightColor.xyz * attenuation;
+				}
+				
+				//Fog computation:
+				float fogFactor = smoothstep( fogNear, fogFar, gl_FragCoord.z / gl_FragCoord.w );
+				vec4 texColor = vec4(diffuse, 1.0) * texture2D(texture, vUv);
 				//Final color:
 				gl_FragColor = mix( texColor, vec4(fogColor, 1.0), fogFactor );
 			}
 		</script>		
+			
 		
 		<script src ="../jquery-1.9.1.min.js"></script>
 		<script src ="../three.js"></script>
